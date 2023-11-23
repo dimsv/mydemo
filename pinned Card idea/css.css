@@ -1,0 +1,71 @@
+#dock {
+    margin: 0px;
+    padding: 0px;
+    list-style: none;
+    position: fixed;
+    top: 0px;
+    height: 100%;
+    z-index: 9999;
+    background-color: #f0f0f0;
+    right: 0px;
+}
+
+#dock>li {
+    width: 40px;
+    height: 8.3%;
+    margin: 0 0 1px 0;
+    background-color: #dcdcdc;
+    background-repeat: no-repeat;
+    background-position: left center;
+}
+
+
+
+/*#dock > li:hover {background-position:-40px 0px;}*/
+
+/* panels */
+#dock ul li {
+    padding: 5px;
+    border: solid 1px #F1F1F1;
+}
+
+
+#dock>li:hover ul {
+    display: block;
+}
+
+#dock>li ul {
+    position: absolute;
+    top: 0px;
+    right: -40px;
+    z-index: -1;
+    width: 0px;
+    display: none;
+    background-color: #F1F1F1;
+    border: solid 1px #969696;
+    padding: 0px;
+    margin: 0px;
+    list-style: none;
+}
+
+#dock>li ul.docked {
+    display: block;
+    z-index: -2;
+}
+
+.dock,
+.undock {
+    float: left;
+}
+
+.undock {
+    display: none;
+}
+
+#sidepanelcontent {
+    margin: 10px 0 0 60px;
+}
+
+#colorgreen {
+    color: green;
+}
