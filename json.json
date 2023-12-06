@@ -1,0 +1,107 @@
+{
+    "took": 6,
+    "timed_out": false,
+    "_shards": {
+        "total": 1,
+        "successful": 1,
+        "skipped": 0,
+        "failed": 0
+    },
+    "hits": {
+        "total": {
+            "value": 427,
+            "relation": "eq"
+        },
+        "max_score": 1.0,
+        "hits": [
+            {
+                "_index": "applications_dev",
+                "_id": "30794",
+                "_score": 1.0,
+                "_source": {
+                    "lastName": "Nicholls",
+                    "internalSourceName": "Move candidate",
+                    "gender": "female",
+                    "jobTitle": "TESTER JOB IN ATHENS",
+                    "departmentId": 1344,
+                    "currentManagementLevel": "",
+                    "jobCode": "",
+                    "createdDateTime": "2022-11-04T21:38:36",
+                    "administrativeArea": "Mitcham",
+                    "educationHistory": [
+                        {
+                            "degreeType": "masters",
+                            "degreeName": "MSc in Shipping",
+                            "schoolName": "University of London",
+                            "EndDate": "2018-10",
+                            "startDate": "2016-10"
+                        },
+                        {
+                            "degreeType": "bachelors",
+                            "degreeName": "BSc in Economics",
+                            "schoolName": "University of Bath",
+                            "EndDate": "2015-09",
+                            "startDate": "2011-09"
+                        }
+                    ],
+                    "organizationId": 1065,
+                    "expiryDate": "2022-12-03T00:00:00",
+                    "geoDistance": 2386.9864244825335,
+                    "pipelineStageName": "Onboarding",
+                    "maxDegreeType": "masters",
+                    "averageRating": 0,
+                    "answerTags": [],
+                    "currentRole": "",
+                    "applicationGuid": "2fdf3818-709a-4bce-9a3c-964946bbbffd",
+                    "email": "emilynichols@someemail.org",
+                    "departmentName": "54564",
+                    "currentEmployer": "",
+                    "pipelineStageId": 1379,
+                    "employers": [
+                        "Howe",
+                        "Wilkinson"
+                    ],
+                    "internalSourceId": 4,
+                    "linkedInUrl": "",
+                    "organizationName": "MARKOS",
+                    "languages": [
+                        "el",
+                        "en",
+                        "it"
+                    ],
+                    "fullName": "Emily Nicholls",
+                    "isEmployed": 0,
+                    "recentRole": "Internship",
+                    "tags": [],
+                    "schoolTypes": [
+                        "university"
+                    ],
+                    "jobId": 3157,
+                    "firstName": "Emily",
+                    "matchScore": 0,
+                    "monthsOfManagementExperience": 0,
+                    "phone": "+446111523522",
+                    "workHistory": [
+                        {
+                            "endDate": "2018-06",
+                            "employer": "Howe",
+                            "description": "Howe Inc  - London, UK\r\n02/2018- 06/2018\tInternship\r\n- Purchasing Department\r\n* Quotations of spares\r\n* Shipment Forms\r\n* Forwarding\r\n* Invoices",
+                            "title": "Internship",
+                            "startDate": "2018-02"
+                        },
+                        {
+                            "endDate": "2015-10",
+                            "employer": "Wilkinson",
+                            "description": "Wilkinson LLC  - Bristol, UK\r\n06/2015- 10/2015\tAssistant/Secretary\r\n* Organised law projects(enhanced on business law)\r\n* Classified documents",
+                            "title": "Assistant/Secretary",
+                            "startDate": "2015-06"
+                        }
+                    ],
+                    "monthsOfWorkExperience": 8,
+                    "candidateId": "C0159AC1D3D9292C3995C6FE7FE4A1A10E4C0587",
+                    "hasParsingIssues": 0
+                }
+            }
+        ]
+    }
+}
