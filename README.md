@@ -1,73 +1,61 @@
-Sample CV Generator - Console Application
-=========================================
+SmartCV - Sample CV Generator
+=================
 
-Description
------------
+This C# console application generates multiple sample CVs (resumes) using predefined templates and random data for names, companies, and job titles. The generated CVs are saved in a specified output directory.
 
-Sample CV Generator is a C# console application that automates the generation of multiple CVs (resumes) based on templates and random data. Use this tool to quickly create sample CVs for testing or demonstration purposes.
+Prerequisites
+-------------
 
-Table of Contents
------------------
-
-*   [Installation](#installation)
-*   [Usage](#usage)
-*   [Configuration](#configuration)
-*   [Contributing](#contributing)
-*   [License](#license)
-
-Installation
-------------
-
-1.  Clone the repository to your local machine:
-    
-    bashCopy code
-    
-    `git clone https://github.com/yourusername/SampleCVGenerator.git cd SampleCVGenerator`
-    
-2.  Open the project in your preferred C# development environment.
-    
-3.  Build the project to ensure all dependencies are resolved.
-    
+*   [.NET SDK](https://dotnet.microsoft.com/download) installed on your machine.
 
 Usage
 -----
 
-1.  Specify the paths to the text files containing first names, last names, companies, job titles, and CV document templates in the `Program.cs` file.
-    
-    csharpCopy code
-    
-    `// Specify the paths to the text files and the CV document templates string firstNamesFilePath = @"C:\path\to\FirstNames.txt"; string lastNamesFilePath = @"C:\path\to\LastNames.txt"; string companiesFilePath = @"C:\path\to\Companies.txt"; string JobTitleFilePath = @"C:\path\to\JobTitle.txt"; string[] templatePaths = { @"C:\path\to\Template1.docx",                            @"C:\path\to\Template2.docx",                            // Add more templates as needed                          };`
-    
-2.  Open a console window and navigate to the directory where the compiled executable is located.
-    
-3.  Run the program by executing the following command:
-    
-    bashCopy code
-    
-    `SampleCVGenerator.exe`
-    
-4.  The program will prompt you to enter the number of CVs you want to generate.
-    
-5.  The application will create CVs using random data and save them to the specified output directory.
-    
+1.  Clone this repository to your local machine.
+2.  Open a terminal or command prompt and navigate to the project directory.
+
+bashCopy code
+
+`cd path/to/SampleCVGenerator`
+
+3.  Compile and run the application.
+
+bashCopy code
+
+`dotnet run`
+
+4.  Follow the on-screen instructions to enter the number of CVs you want to generate.
 
 Configuration
 -------------
 
-*   Adjust the file paths in `Program.cs` to point to your specific data files and CV templates.
-*   Customize the template documents by replacing or adding fields inside the templates.
+The application uses text files for storing first names, last names, companies, and job titles. Ensure the following files are available in the specified directory:
 
-Contributing
-------------
+*   `SampleCVData\FirstNames.txt`
+*   `SampleCVData\LastNames.txt`
+*   `SampleCVData\Companies.txt`
+*   `SampleCVData\JobTitle.txt`
 
-If you'd like to contribute to this project, please follow these guidelines:
+The CV templates are stored in the `SampleCVTemplate` directory with filenames:
 
-1.  Fork the repository.
-2.  Create a new branch for your feature or bug fix.
-3.  Make your changes and test thoroughly.
-4.  Submit a pull request to the main repository.
+*   `Resume Sample.docx`
+*   `Resume Sample 2.docx`
+*   `Resume Sample 3.docx`
+
+Add more templates as needed, and update the `templatePaths` array in the code accordingly.
+
+Output
+------
+
+Generated CVs are saved in the user's Downloads folder under the "SmartCV.SampleCVs.OutputFolder" directory.
+
+Notes
+-----
+
+*   Ensure the application has the necessary permissions to create directories and files in the specified output directory.
+*   Make sure to customize the template fields in the CV templates with corresponding placeholders like `[FirstName]`, `[LastName]`, `[Email]`, `[Company]`, `[Job]`, etc. The application replaces these placeholders with actual data during the generation process.
 
 License
 -------
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the [MIT License](LICENSE).
