@@ -32,8 +32,11 @@ Configuration
 The application uses text files for storing first names, last names, companies, and job titles. Ensure the following files are available in the specified directory:
 
 *   `SampleCVData\FirstNames.txt`
+
 *   `SampleCVData\LastNames.txt`
+
 *   `SampleCVData\Companies.txt`
+
 *   `SampleCVData\JobTitle.txt`
 
 The CV templates are stored in the `SampleCVTemplate` directory with filenames:
