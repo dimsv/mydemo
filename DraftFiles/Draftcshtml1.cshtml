@@ -1,0 +1,33 @@
+@{
+    var employeeId = UrlData[0];
+    if (employeeId.IsEmpty())
+    {
+        Response.Redirect(@Href("~/default"));
+    }
+    var forenames = "";
+    var surname = "";
+    var dateOfBirth = "";
+    var emailAddress = "";
+    var role = "";
+    var db = Database.Open("DataExample");
+    if (IsPost)
+    {
+        forenames = Request["forenames"];
+        surname = Request["surname"];
+        dateOfBirth = Request["dateOfBirth"];
+        emailAddress = Request["emailAddress"];
+        role = Request["role"];
+        var sqlCommand = "UPDATE Employees SET Forenames = @0, Surname = @1, " +
+                         "DateOfBirth = @2, EmailAddress = @3, Role = @4 " +
+                         "WHERE EmployeeId = @5";
+        db.Execute(sqlCommand, forenames, surname, dateOfBirth, emailAddress, role, employeeId);
+        Response.Redirect(@Href("~/default"));
+    }
+    var sqlSelect = "SELECT * FROM Employees WHERE EmployeeId=@0";
+    var row = db.QuerySingle(sqlSelect, employeeId);
+    forenames = row.Forenames;
+    surname = row.Surname;
+    dateOfBirth = row.DateOfBirth.ToShortDateString();
+    emailAddress = row.EmailAddress;
+    role = row.Role;
+}

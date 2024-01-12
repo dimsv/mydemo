@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src=”@Href(“~/Scripts/jquery-1.6.2.min.js”)“ type=”text/javascript”></script>
+
+    <script type=”text/javascript”>
+            var colors = [“red”, “blue”, “green”, “yellow”]
+            $(document).ready(function(){
+            $('#colorchanger').click(function(){
+            $('p').each(function(index, value){
+            $(this).css('background-color', colors[index]);
+            });
+            })
+            });
+            </script>
+</head>
+
+<body>
+
+    <p>This paragraph will turn red</p>
+    <p>This paragraph will turn blue</p>
+    <p>This paragraph will turn green</p>
+    <p>This paragraph will turn yellow</p>
+    <input type=”button” id=”colorchanger” value=”click me” />
+
+</body>
+
+</html>

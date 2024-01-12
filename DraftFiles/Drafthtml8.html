@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Web Page</title>
+  <!-- Include jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body>
+
+  <div class="activity">
+    <span class="flag-icon" data-activity-id="1">🚩</span>
+    <p>Activity description goes here...</p>
+  </div>
+
+  <!-- Add more activities as needed -->
+
+  <script>
+    $(document).ready(function() {
+      // Attach click event to the flag icon
+      $('.flag-icon').on('click', function() {
+        // Toggle the flag icon
+        $(this).toggleClass('flagged');
+
+        // Get the activity ID from the data attribute
+        var activityId = $(this).data('activity-id');
+
+        // Send AJAX request to update the database
+        $.ajax({
+          url: 'update_database.php', // Change this to your server-side script
+          method: 'POST',
+          data: { activityId: activityId },
+          success: function(response) {
+            // Handle the response from the server if needed
+            console.log('Database updated successfully');
+          },
+          error: function(xhr, status, error) {
+            // Handle errors if any
+            console.error('Error updating database:', status, error);
+          }
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>

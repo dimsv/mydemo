@@ -1,0 +1,33 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Color Change Example</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#changeColorButton").click(function () {
+                $("#targetElement").css("color", getRandomColor());
+            });
+
+            function getRandomColor() {
+                var letters = '0123456789ABCDEF';
+                var color = '#';
+                for (var i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+        });
+    </script>
+</head>
+<body>
+    <div>
+        <h1 id="targetElement">Click the button to change my color!</h1>
+        <button id="changeColorButton">Change Color</button>
+    </div>
+</body>
+</html>
