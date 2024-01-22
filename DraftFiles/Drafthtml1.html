@@ -1,27 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <title>Responsive 3 Columns Layout</title>
+    <title>Two-Row Bootstrap Layout</title>
 </head>
-
 <body>
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-12 bg-success">Full width on all screen sizes</div>
-            <div class="col-md-7 bg-warning">Half width on medium and larger screens</div>
-            <div class="col-lg-5 bg-success">One-third width on large and larger screens</div>
 
+<div class="container">
+    <!-- First Row (Header) -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="bg-primary p-3 text-white">
+                <h5>Column 1</h5>
+                <!-- Header content for column 1 -->
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-secondary p-3 text-white">
+                <h5>Column 2</h5>
+                <!-- Header content for column 2 -->
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-info p-3 text-white">
+                <h5>Column 3</h5>
+                <!-- Header content for column 3 -->
+            </div>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Second Row (Main Content and Filters/Search) -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="bg-light p-3">
+                <h5>Main Content</h5>
+                <!-- Main content goes here -->
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-warning p-3">
+                <h5>Filters/Search</h5>
+                <!-- Filters and search content goes here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </body>
-
 </html>

@@ -1,0 +1,65 @@
+@{
+    // Assuming you have a connection string named "DefaultConnection" in your web.config
+    var connectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Database Page</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $("#updateButton").click(function () {
+                // Perform AJAX request to the server
+                $.ajax({
+                    type: "POST",
+                    url: "/UpdateDatabase",
+                    success: function (data) {
+                        // Handle success, you can display a message or update UI here
+                        alert("Database updated successfully!");
+                    },
+                    error: function () {
+                        // Handle error
+                        alert("Error updating database!");
+                    }
+                });
+            });
+        });
+    </script>
+
+</head>
+<body>
+    
+    <h1>Update Database Page</h1>
+    <button id="updateButton">Update Database</button>
+
+</body>
+</html>
+
+
+@{
+    // Your database update logic
+    void UpdateDatabase()
+    {
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            connection.Open();
+            
+            // Your SQL command to update the database table
+            string sql = "UPDATE YourTable SET YourColumn = 'NewValue' WHERE SomeCondition";
+            
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.ExecuteNonQuery();
+            }
+        }
+    }
+
+    // Check if the request is a POST request to the "/UpdateDatabase" endpoint
+    if (IsPost && Request.Path.ToLower() == "/updatedatabase")
+    {
+        UpdateDatabase();
+    }
+}

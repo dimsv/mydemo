@@ -2,55 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <title>Two-Row Bootstrap Layout</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Integration</title>
 </head>
 <body>
+    <h1>ChatGPT Integration</h1>
+    <textarea id="prompt" rows="4" cols="50" placeholder="Enter your message"></textarea>
+    <button onclick="generateParagraph()">Generate Paragraph</button>
+    <p id="output"></p>
 
-<div class="container">
-    <!-- First Row (Header) -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="bg-primary p-3 text-white">
-                <h5>Column 1</h5>
-                <!-- Header content for column 1 -->
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="bg-secondary p-3 text-white">
-                <h5>Column 2</h5>
-                <!-- Header content for column 2 -->
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="bg-info p-3 text-white">
-                <h5>Column 3</h5>
-                <!-- Header content for column 3 -->
-            </div>
-        </div>
-    </div>
+    <script>
+        async function generateParagraph() {
+            const promptText = document.getElementById('prompt').value;
 
-    <!-- Second Row (Main Content and Filters/Search) -->
-    <div class="row">
-        <div class="col-md-8">
-            <div class="bg-light p-3">
-                <h5>Main Content</h5>
-                <!-- Main content goes here -->
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="bg-warning p-3">
-                <h5>Filters/Search</h5>
-                <!-- Filters and search content goes here -->
-            </div>
-        </div>
-    </div>
-</div>
+            const requestOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'api-key': '67e521491b0442698c908a7cfda0f96d' // API key
+                },
+                body: JSON.stringify({
+                    messages: [
+                        {
+                            role: 'assistant',
+                            content: promptText
+                        }
+                    ],
+                    max_tokens: 800,
+                    temperature: 0.7,
+                    frequency_penalty: 0,
+                    presence_penalty: 0,
+                    top_p: 0.95,
+                    stop: null
+                })
+            };
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+            try {
+                const response = await fetch('https://esrdai.openai.azure.com/openai/deployments/gpt-35-turbo/chat/completions?api-version=2023-07-01-preview', requestOptions);
+                const data = await response.json();
 
+                if (data.choices && data.choices.length > 0) {
+                    const generatedParagraph = data.choices[0].message.content;
+                    document.getElementById('output').innerText = generatedParagraph;
+                } else {
+                    document.getElementById('output').innerText = 'No response from the model.';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('output').innerText = 'An error occurred.';
+            }
+        }
+    </script>
 </body>
 </html>

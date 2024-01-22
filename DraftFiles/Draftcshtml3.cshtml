@@ -1,0 +1,65 @@
+@{
+    var category = "";
+    var message = "";
+    var sql = "";
+    var db = Database.Open("Classifieds");
+    if (Request["categoryId"].AsInt() > 0)
+    {
+        if (!IsPost)
+        {
+            sql = "SELECT Category FROM Categories WHERE CategoryId = @0";
+            category = db.QueryValue(sql, Request["categoryId"]);
+        }
+        else
+        {
+            if (!Request["category"].IsEmpty())
+            {
+                sql = "UPDATE Categories SET Category = @0 WHERE CategoryId = @1";
+                db.Execute(sql, Request["category"], Request["categoryId"]);
+                message = "Category changed to " +Request["category"];
+            }
+        }
+    }
+    sql = "SELECT* FROM Categories";
+    var categories = db.Query(sql);
+}
+<form>
+    <div>
+        Select Category:
+        <select name="categoryId">
+            <option value="0">--Select Category--</option>
+            @foreach (var cat in categories)
+            {
+                <option value="@cat.CategoryId">@cat.Category</option>
+            }
+        </select>
+        <input type="submit" value="Select" />
+    </div>
+</form>
+<form method="post">
+    <div>@message</div>
+    <fieldset>
+        <legend>Update Category</legend>
+        <div>
+            <label for="category">Category:</label>
+        </div>
+        <div>
+            <input type="text" name="category" value="@category" />
+        </div>
+        <div>
+            <input type="submit" value="Update" />
+        </div>
+    </fieldset>
+</form>
+
+
+
+
+
+
+        select = db.QueryValue(@"SELECT * FROM events e WITH (NOLOCK) JOIN event_types ON(eType = etId) JOIN candidates ON (eCandidateId=cdId)
+                                LEFT JOIN applications ON(eApplicationId = aId)
+                        LEFT JOIN parsed_cvs ON (aParsedCvId=cvId)
+                        LEFT JOIN jobs ON (aJobId=jId OR (e.eNumericMetadata1=jId AND e.eType IN (27,14,12) OR (jId=eJobId AND jId IS NOT NULL)))
+                        LEFT JOIN logins on (eCreatedBy=lId)
+                        WHERE eCandidateId =@0 and  eIsPinned = 1", aCandidateId );
