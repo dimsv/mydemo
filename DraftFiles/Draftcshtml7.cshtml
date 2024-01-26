@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Table Example</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body>
+
+    <table id="myTable" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table rows will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <button onclick="fetchAndUpdateTable()">Fetch and Update Table</button>
+
+    <script>
+        function fetchAndUpdateTable() {
+            // Ajax request to fetch data from the server
+            $.ajax({
+                url: '/api/getUserData', // Replace with your server endpoint
+                method: 'GET',
+                success: function(data) {
+                    updateTable(data);
+                },
+                error: function() {
+                    alert('Failed to fetch data from the server.');
+                }
+            });
+        }
+
+        function updateTable(data) {
+            // Clear existing rows
+            $('#myTable tbody').empty();
+
+            // Add new rows based on fetched data
+            for (var i = 0; i < data.length; i++) {
+                var newRow = '<tr><td>' + data[i].id + '</td><td>' + data[i].name + '</td><td>' + data[i].age + '</td></tr>';
+                $('#myTable tbody').append(newRow);
+            }
+        }
+    </script>
+
+</body>
+</html>

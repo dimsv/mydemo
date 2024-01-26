@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Table Example</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body>
+
+    <table id="myTable" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>John</td>
+                <td>25</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Jane</td>
+                <td>30</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button onclick="updateTable()">Update Table</button>
+
+    <script>
+        function updateTable() {
+            // Example: Replace the content of the second row with new values
+            var newRowContent = '<td>2</td><td>New Name</td><td>35</td>';
+            $('#myTable tbody tr:eq(1)').html(newRowContent);
+        }
+    </script>
+
+</body>
+</html>
