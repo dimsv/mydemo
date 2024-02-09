@@ -1,25 +1,20 @@
-$(document).ready(function () {
-    $('#yourButtonId').click(function () {
-        $.ajax({
-            type: 'POST',
-            url: 'YourPage.aspx/UpdateDatabase', // or the URL of your Web API endpoint
-            contentType: 'application/json; charset=utf-8',
-            dataType: 'json',
-            success: function (data) {
-                // Handle success
-                console.log('Database updated successfully');
-            },
-            error: function (error) {
-                // Handle error
-                console.log('Error updating database');
-            }
-        });
-    });
-});
+<compilers>
+<compiler language="c#;cs;csharp" extension=".cs"
+    type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"
+    warningLevel="4" compilerOptions="/langversion:default /nowarn:1659;1699;1701"/>
+<compiler language="vb;vbs;visualbasic;vbscript" extension=".vb"
+    type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.VBCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"
+    warningLevel="4" compilerOptions="/langversion:default /nowarn:41008 /define:_MYTYPE=\&quot;Web\&quot; /optionInfer+"/>
+</compilers>
 
 
-[System.Web.Services.WebMethod]
-public static void UpdateDatabase()
-{
-    // Perform database update logic here
-}
+
+
+<compilers>
+<compiler language="c#;cs;csharp" extension=".cs" 
+    type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" 
+    warningLevel="4" compilerOptions="/langversion:default /nowarn:1659;1699;1701"/>
+<compiler language="vb;vbs;visualbasic;vbscript" extension=".vb" 
+    type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.VBCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" 
+    warningLevel="4" compilerOptions="/langversion:default /nowarn:41008 /define:_MYTYPE=\&quot;Web\&quot; /optionInfer+"/>
+</compilers>
