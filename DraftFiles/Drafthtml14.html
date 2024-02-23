@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Responsive Example</title>
+<style>
+    /* Hide the element when window width is less than 600px */
+    @media (max-width: 750px) {
+        #element-to-hide-1 {
+            display: none;
+        }
+    }
+
+    /* Some colors for testing */
+    body {
+        background-color: #f0f0f0;
+    }
+
+    #element-to-hide {
+        background-color: #ffd700; /* gold */
+        padding: 10px;
+        border: 1px solid #000;
+    }
+</style>
+</head>
+<body>
+
+<!-- Your element -->
+<div id="element-to-hide-1">
+    This is the element to hide.
+</div>
+
+<div id="element-to-hide" style="margin-left: 370px;">
+    This is the element to hide.
+</div>
+
+<script>
+    // JavaScript to change inline style when window resizes
+    window.addEventListener('resize', function() {
+        var element = document.getElementById('element-to-hide');
+        if (window.innerWidth <= 750) {
+            // Change margin-left to 0 when window width is smaller or equal to 600px
+            element.style.marginLeft = '0';
+        } else {
+            // Restore the original margin-left when window width is larger than 600px
+            element.style.marginLeft = '370px';
+        }
+    });
+</script>
+
+</body>
+</html>

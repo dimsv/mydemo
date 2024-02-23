@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Responsive Example</title>
+<style>
+    /* Hide the element when window width is less than 600px */
+    @media (max-width: 600px) {
+        #element-to-hide {
+            display: none;
+        }
+
+        #show-button {
+            display: block;
+        }
+    }
+
+    /* Some colors for testing */
+    body {
+        background-color: #f0f0f0;
+    }
+
+    #element-to-hide {
+        background-color: #ffd700; /* gold */
+        padding: 10px;
+        border: 1px solid #000;
+    }
+
+    #show-button {
+        display: none;
+    }
+</style>
+</head>
+<body>
+
+<!-- Your element -->
+<div id="element-to-hide" style="margin-left: 370px;">
+    This is the element to hide.
+</div>
+
+<!-- Button to show the hidden element -->
+<button id="show-button" onclick="showElement()">Show Element</button>
+
+<script>
+    // JavaScript to change inline style when window resizes
+    window.addEventListener('resize', function() {
+        var element = document.getElementById('element-to-hide');
+        var showButton = document.getElementById('show-button');
+        if (window.innerWidth <= 600) {
+            // Change margin-left to 0 and hide the element when window width is smaller or equal to 600px
+            element.style.marginLeft = '0';
+            element.style.display = 'none';
+            showButton.style.display = 'block';
+        } else {
+            // Restore the original margin-left and show the element when window width is larger than 600px
+            element.style.marginLeft = '370px';
+            element.style.display = 'block';
+            showButton.style.display = 'none';
+        }
+    });
+
+    // Function to show the hidden element when button is clicked
+    function showElement() {
+        var element = document.getElementById('element-to-hide');
+        var showButton = document.getElementById('show-button');
+        element.style.display = 'block';
+        showButton.style.display = 'none';
+    }
+</script>
+
+</body>
+</html>

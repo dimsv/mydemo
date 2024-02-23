@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Responsive Example with Bootstrap 4</title>
+<!-- Bootstrap CSS -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    /* Some colors for testing */
+    body {
+        background-color: #f0f0f0;
+        padding: 20px;
+    }
+
+    #element-to-hide {
+        background-color: #ffd700; /* gold */
+        padding: 10px;
+        border: 1px solid #000;
+    }
+
+    #element-to-resize {
+        background-color: #87CEEB; /* sky blue */
+        padding: 10px;
+        border: 1px solid #000;
+    }
+
+    #resize-button {
+        display: none; /* Initially hide the button */
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 9999;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Element to hide -->
+    <div id="element-to-hide" class="mt-3" style="margin-left: 370px;">
+        This is the element to hide.
+    </div>
+
+    <!-- Element to resize -->
+    <div id="element-to-resize" class="mt-3" style="margin-left: 370px;">
+        This is the element to resize.
+    </div>
+
+    <!-- Resize Button -->
+    <button id="resize-button" class="btn btn-primary mt-3">Resize Element</button>
+</div>
+
+<!-- Bootstrap JS and jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    // JavaScript to resize the element and hide another element
+    window.addEventListener('resize', function() {
+        var elementToResize = document.getElementById('element-to-resize');
+        var elementToHide = document.getElementById('element-to-hide');
+        var resizeButton = document.getElementById('resize-button');
+
+        if (window.innerWidth <= 600) {
+            // Resize the element when window width is smaller or equal to 600px
+            elementToResize.style.width = '50%';
+            elementToResize.style.marginLeft = '10px'; // Adjust margin for better visibility
+
+            // Show the resize button and hide the other element when resizing
+            resizeButton.style.display = 'block';
+            elementToHide.style.display = 'none';
+        } else {
+            // Restore the original width and show the other element when window width is larger than 600px
+            elementToResize.style.width = 'auto';
+            elementToResize.style.marginLeft = '370px'; // Restore original margin
+
+            // Hide the resize button and show the other element when resizing
+            resizeButton.style.display = 'none';
+            elementToHide.style.display = 'block';
+        }
+    });
+
+    // Hide the other element when the resize button is clicked
+    document.getElementById('resize-button').addEventListener('click', function() {
+        var elementToHide = document.getElementById('element-to-hide');
+        elementToHide.style.display = 'none';
+    });
+</script>
+
+</body>
+</html>

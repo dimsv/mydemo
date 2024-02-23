@@ -1,0 +1,95 @@
+<!-- Main content -->
+<div class="content-wrapper">
+
+  <!-- Content area -->
+  <div class="content d-flex justify-content-center align-items-center">
+
+      <div class="row justify-content-center">
+          <!-- Image column -->
+          <div class="col-md-8 d-none d-md-block">
+              <div class="image-container">
+                  <img src="~/Images/TestLoginImage.png" alt="Image" class="image">
+              </div>
+          </div>
+      </div>
+
+      <!-- Login form column -->
+      <div class="col-md-6 d-flex justify-content-center align-items-center">
+          <!-- Login form -->
+          <form class="login-form" autocomplete="off" id="login_form" action="" method="post">
+              @AntiForgery.GetHtml()
+              <div class="card mb-0">
+                  <div class="card-header bg-white ">
+                      <h1 class="card-title font-weight-semibold">
+                          @uiTerms["lblLogin"]
+                      </h1>
+                  </div>
+
+                  <div class="card-body">
+                      <div class="d-block text-grey-700 font-weight-semibold font-size-lg mb-3">
+                          @uiTerms["lblNotUsingSmartCVYet"] <a href="~/account/register?lang=@language">@uiTerms["lblStartFreeTrial"]</a>
+                      </div>
+
+                      <style>
+                          ul {
+                              padding-left: 0;
+                              margin-bottom: 0px
+                          }
+
+                          div:empty {
+                              display: none;
+                          }
+                      </style>
+
+                      @if (IsPost)
+                      {
+                          <div class="alert alert-danger alert-dismissible font-weight-semibold">
+                              @Html.ValidationSummary(false)
+                          </div>
+                      }
+
+                      <div class="form-group">
+                          @Html.TextBox("email", Request["email"], new { id = "email", @class = "form-control", placeholder = "Email" })
+                          @Html.ValidationMessage("email", new { @class = "form-text text-danger" })
+                      </div>
+
+                      <div class="form-group">
+                          @Html.Password("password", Request["password"], new { id = "password", @class = "form-control", placeholder = "Password" })
+                          @Html.ValidationMessage("password", new { @class = "form-text text-danger" })
+                      </div>
+
+                      <div class="form-group d-none">
+                          <div class="form-check">
+                              <label class="form-check-label">
+                                  <input type="checkbox" id="rememberMe" name="rememberMe" class="form-input-styled" value="true" checked="@rememberMe" />
+                                  @uiTerms["lblRememberMe"]
+                              </label>
+                          </div>
+                      </div>
+
+                      <div class="form-group">
+                          <button type="submit" class="btn btn-block bg-teal-400 font-weight-semibold submit-btn">@uiTerms["lblLogin"]<i class="icon-circle-right2 ml-2"></i></button>
+                      </div>
+
+                      <div class="text-center">
+                          <a class="font-weight-semibold" href="/account/recover-password?lang=@language">@uiTerms["lblForgotYourPassword"]</a>
+                      </div>
+                  </div>
+              </div>
+          </form>
+          <!-- /login form -->
+      </div>
+  </div>
+  <!-- /content area -->
+</div>
+<!-- /main content -->
+
+<script>
+  $(".submit-btn").click(function () {
+      if ($('#login_form').valid() == true) {
+          $(".submit-btn").prop("disabled", true);
+          $(".submit-btn").html("<i class='fa fa-spinner fa-spin'></i>  @uiTerms["msgPleaseWait"]");
+          $('#login_form').submit();
+      }
+  })
+</script>

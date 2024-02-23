@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Responsive Example with Bootstrap 4</title>
+<!-- Bootstrap CSS -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    /* Some colors for testing */
+    body {
+        background-color: #f0f0f0;
+        padding: 20px;
+    }
+
+    #element-to-resize {
+        background-color: #ffd700; /* gold */
+        padding: 10px;
+        border: 1px solid #000;
+    }
+
+    #toggle-button {
+        display: none; /* Initially hide the button */
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row">
+        <div class="col-auto">
+            <!-- Button to slide the hidden area -->
+            <button id="slide-button" class="btn btn-primary">Slide</button>
+        </div>
+    </div>
+
+    <!-- Your element -->
+    <div id="element-container" class="mt-3">
+        <div id="element-to-resize" style="margin-left: 370px;">
+            This is the element to hide.
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS and jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    // JavaScript to toggle visibility of the element
+    window.addEventListener('resize', function() {
+        var element = document.getElementById('element-to-resize');
+        var slideButton = document.getElementById('slide-button');
+
+        if (window.innerWidth <= 600) {
+            // Hide the element and show the button when window width is smaller or equal to 600px
+            element.style.display = 'none';
+            slideButton.style.display = 'block';
+        } else {
+            // Show the element and hide the button when window width is larger than 600px
+            element.style.display = 'block';
+            slideButton.style.display = 'none';
+        }
+    });
+
+    // JavaScript to slide the hidden area when the button is clicked
+    document.getElementById('slide-button').addEventListener('click', function() {
+        var elementContainer = document.getElementById('element-container');
+        var elementToHide = document.getElementById('element-to-resize');
+        if (elementContainer.classList.contains('slide-out')) {
+            // Slide in
+            elementContainer.classList.remove('slide-out');
+            elementToHide.style.marginLeft = '370px';
+        } else {
+            // Slide out
+            elementContainer.classList.add('slide-out');
+            elementToHide.style.marginLeft = '0';
+        }
+    });
+</script>
+
+</body>
+</html>
