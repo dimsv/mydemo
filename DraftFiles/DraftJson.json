@@ -15,3 +15,23 @@
     "jobGrouping": 0,
     "automatedEmailTemplate": 0
 }
+
+
+
+{
+    "hasLogo": 0,
+    "careerSiteStatus": 1,
+    "corporateWebsite": "",
+    "language": "en",
+    "companyProfile": "",
+    "companyProfile_en": "",
+    "companyProfile_el": "",
+    "replyText": "",
+    "termsText": "",
+    "termsUrl": "",
+    "generalTermsText": "",
+    "termsConsent": 0,
+    "showGeneralAdmissionLink": 1,
+    "jobGrouping": 0,
+    "automatedEmailTemplate": 0
+}
