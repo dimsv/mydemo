@@ -1,0 +1,16 @@
+// Specify the path to the folder containing your Excel files
+// Specify the path for the new combined Excel file
+// Create a new workbook for the combined data
+    // Create a worksheet in the combined Excel file
+    // Get a list of all Excel files in the folder
+            // Assuming data is in the first worksheet, adjust as needed
+            // Get the last used row number in the combined worksheet
+            // Copy the data from the source worksheet to the combined worksheet
+                    // Get the cell in the source worksheet at the current row and column
+                    // Calculate the corresponding destination row in the combined worksheet
+                    // The destination column remains the same as the source column
+                    // Get the address of the destination cell in the combined worksheet
+                    // Copy the value from the source cell to the destination cell in the combined worksheet
+    // Save the combined Excel file
+// Print message on the screen
+// Press any key for exit
