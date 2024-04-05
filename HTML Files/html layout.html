@@ -1,0 +1,555 @@
+@{
+// var db = Database.Open("smartcv");
+//var currentCustomerId = db.QueryValue("SELECT lCustomerId FROM logins WHERE lId=@0", WebSecurity.CurrentUserId);
+//var numOfQueuedItems = SmartCV.NumOfQueuedItems(currentCustomerId);
+var numOfQueuedItems = 0;
+
+var userPrefs = SmartCV.GetUserPrefs(WebSecurity.CurrentUserId);
+var uiTerms = Utils.GetTerms(userPrefs.uiLanguage);
+
+var db = Database.Open("smartcv");
+var currentLogin = db.QuerySingle("SELECT * FROM logins WITH (NOLOCK) JOIN customers ON (lCustomerId=cId) WHERE lId=@0",
+WebSecurity.CurrentUserId);
+var currentCustomerId = currentLogin.lCustomerId;
+
+if (currentLogin.lStatusId == 2)
+{
+WebSecurity.Logout();
+Response.Redirect("/account/user-disabled/" + userPrefs.uiLanguage);
+}
+
+if (currentLogin.cIsSuspended == 1)
+{
+WebSecurity.Logout();
+Response.Redirect("/account/account-suspended/" + userPrefs.uiLanguage);
+}
+
+var inboxNotificationsLastReadDateTime = userPrefs.InboxNotificationsLastReadDateTime;
+var unreadNotificationsCount = db.QueryValue("SELECT count(*) FROM notifications WITH (NOLOCK) JOIN events ON(nEventId =
+eId) JOIN event_types ON(eType = etId) JOIN applications ON(eApplicationId = aId) JOIN parsed_cvs ON(aParsedCvId = cvId)
+JOIN jobs ON(aJobId = jId) JOIN logins ON(nLoginFrom = lId) WHERE nLoginTo =@0 AND nCreatedDateTime>@1 ",
+WebSecurity.CurrentUserId, inboxNotificationsLastReadDateTime);
+
+var remaining = db.QuerySingle("SELECT SUM(tTotalParses) as totalParses, SUM(tUsedParses) AS usedParses FROM
+transactions WITH (NOLOCK) JOIN products ON (tProductId=pId) WHERE tCustomerId=@0 AND tStatus=3 AND pType=1",
+currentCustomerId);
+var remainingCount = remaining.totalParses - remaining.usedParses;
+
+}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>@Page.Title</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link id="page-icon" rel="shortcut icon" href="~/favicon.ico?v=3" />
+
+    <!-- Global stylesheets -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet"
+        type="text/css">
+    <link href="~/global_assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/bootstrap_limitless.min.css?v=2" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/layout.min.css" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/components.min.css" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/colors.min.css?v=33" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/smartcv-colors.min.css?v=33" rel="stylesheet" type="text/css">
+    <link href="~/assets/css/smartcv-app.min.css?v=211208" rel="stylesheet" type="text/css">
+    <!-- /global stylesheets -->
+    <!-- Core JS files -->
+    <script src="~/global_assets/js/main/jquery.min.js"></script>
+    <script src="~/global_assets/js/main/bootstrap.bundle.min.js"></script>
+    <script src="~/global_assets/js/plugins/loaders/blockui.min.js"></script>
+    <script src="~/global_assets/js/demo_pages/components_dropdowns.js"></script>
+
+    <!-- /core JS files -->
+    <!-- Theme JS files -->
+    <script src="~/assets/js/app.js"></script>
+    <!-- /theme JS files -->
+
+    <script src="~/global_assets/js/plugins/forms/inputs/typeahead/typeahead.bundle.min.js"></script>
+    @*
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.1.2/handlebars.min.js"></script>*@
+    <script src="~/assets/plugins/handlebars.min.js"></script>
+
+    @*<style>
+        a.simple:link {
+            color: #0675cc;
+        }
+
+        .list-feed-item a {
+            color: #0288d1 !important;
+        }
+    </style>*@
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .mobile-container {
+            max-width: 480px;
+            margin: auto;
+            background-color: #555;
+            height: 500px;
+            color: white;
+            border-radius: 10px;
+        }
+
+        .topnav {
+            overflow: hidden;
+            background-color: #333;
+            position: relative;
+        }
+
+        .topnav #myLinks {
+            display: none;
+        }
+
+        .topnav a {
+            color: white;
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 17px;
+            display: block;
+        }
+
+        .topnav a.icon {
+            background: black;
+            display: block;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        .topnav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        .active {
+            background-color: #04AA6D;
+            color: white;
+        }
+    </style>
+
+</head>
+
+<body class="layout-boxed" data-spy="scroll" data-target="#profile_nav" style="position:relative">
+    <script async src="https://kit.fontawesome.com/271f627080.js"></script>
+
+    <script>
+        $('.dropdown-menu a.dropdown-toggle').on('click', function (e) {
+            if (!$(this).next().hasClass('show')) {
+                $(this).parents('.dropdown-menu').first().find('.show').removeClass("show");
+            }
+            var $subMenu = $(this).next(".dropdown-menu");
+            $subMenu.toggleClass('show');
+
+            $(this).parents('li.nav-item.dropdown.show').on('hidden.bs.dropdown', function (e) {
+                $('.dropdown-submenu .show').removeClass("show");
+            });
+
+            return false;
+        });
+    </script>
+    <div class="mobile-container">
+        <div id="page_container" class="d-flex flex-column layout-boxed">
+            <!-- above was: d-flex flex-column flex-1  -->
+            <div class="topnav">
+                <div class="bg-teal-400">
+
+                    <div class="container pr-0 col-8">
+                        <!-- Main navbar -->
+                        <div class="navbar navbar-expand-md navbar-dark bg-teal-400 navbar-component mb-0"
+                            style="border:none">
+                            <div class="navbar-brand"
+                                style="min-width:7rem;margin-left:-30px;padding-top:0.6rem;padding-bottom:0.6rem;">
+                                <a href="~/" class="d-inline-block">
+                                    @*<img src="/global_assets/images/logo_light.png" alt="">*@
+                                    <img src="/images/smartcv-logo.svg" alt="smartCV"
+                                        style="height:1.65rem;margin-top:3px;">
+                                </a>
+                            </div>
+
+                            <div class="d-xl-none">
+                                <button class="navbar-toggler" type="button" data-toggle="collapse"
+                                    data-target="#navbar-global-search">
+                                    <i class="icon-grid3"></i>
+                                </button>
+                            </div>
+
+                            <div class="navbar-collapse collapse pr-0" style="white-space:nowrap"
+                                id="navbar-global-search">
+                                <ul class="navbar-nav mr-2">
+                                    <li class="nav-item"><a href="~/" id="topnav_home"
+                                            class="navbar-nav-link font-weight-bold font-size-lg pr-2 pl-2"><i
+                                                class="icon-home"></i></a></li>
+                                    <li class="nav-item"><a href="~/jobs" id="topnav_jobs"
+                                            class="navbar-nav-link font-weight-bold font-size-lg pr-2 pl-2">@uiTerms["lblJobsShort"]</a>
+                                    </li>
+                                    <li class="nav-item"><a href="~/candidates" id="topnav_candidates"
+                                            class="navbar-nav-link font-weight-bold font-size-lg pr-2 pl-2">@uiTerms["candidates"]</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="~/inbox" id="topnav_inbox"
+                                            class="navbar-nav-link font-weight-bold font-size-lg">
+                                            Inbox
+                                            @if (unreadNotificationsCount > 0)
+                                            {
+                                            <span
+                                                class="badge badge-pill bg-danger ml-auto ml-xl-2">@unreadNotificationsCount</span>
+                                            }
+                                        </a>
+                                    </li>
+                                    <li class="nav-item dropdown" style="margin-left:0px">
+                                        <a href="#" id="topnav_reports"
+                                            class="navbar-nav-link dropdown-toggle font-size-lg font-weight-bold pr-2 pl-2"
+                                            data-toggle="dropdown">
+                                            @uiTerms["lblReports"]
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-left">
+                                            <a href="~/analytics-dashboard"
+                                                class="dropdown-item">@uiTerms["lblAnalyticsDashboard"]</a>
+                                            <div class="dropdown-divider"></div>
+                                            <a href="~/activity-report"
+                                                class="dropdown-item">@uiTerms["lblActivityReport"]</a>
+                                            @*<a href="~/time-mgmt-report"
+                                                class="dropdown-item">@uiTerms["lblTimeManagementReport"]</a>*@
+                                            <a href="~/candidates-report"
+                                                class="dropdown-item">@uiTerms["lblCandidatesReport"]</a>
+                                            <a href="~/jobs-report" class="dropdown-item">@uiTerms["lblJobsReport"]</a>
+                                            <a href="~/candidates-match-report"
+                                                class="dropdown-item">@uiTerms["lblCandidatesMatchReport"]</a>
+                                            <a href="~/time-to-hire-report"
+                                                class="dropdown-item">@uiTerms["lblTimeToHireReport"]</a>
+                                            <a href="~/hiring-pace-report"
+                                                class="dropdown-item">@uiTerms["lblHiringPaceReport"]</a>
+                                            <div class="dropdown-divider"></div>
+                                            <a href="~/export" class="dropdown-item">@uiTerms["mnoExportData"]</a>
+                                        </div>
+                                    </li>
+                                    <li class="nav-item"><a href="~/video-interviews-invitations"
+                                            id="topnav_videoInterviews"
+                                            class="navbar-nav-link font-weight-bold font-size-lg pr-2 pl-2">@uiTerms["lblVideoInterviews"]</a>
+                                    </li>
+
+                                    @if (numOfQueuedItems > 0)
+                                    {
+                                    <li class="nav-item"><a href="#" class="navbar-nav-link">Σε αναμονή <span
+                                                class="badge badge-pill bg-danger ml-auto ml-xl-2">@numOfQueuedItems</span></a>
+                                    </li>
+                                    }
+                                </ul>
+                                <div class="navbar-collapse collapse mr-2" id="navbar-form-icons">
+                                    <form class="my-3 my-xl-0" action="~/candidates">
+                                        <div id="remoteContainer"
+                                            class="form-group-feedback form-group-feedback-left mb-3 mb-xl-0"
+                                            style="background:#ffffff">
+                                            <input type="search" id="remote" name="q" class="form-control typeahead"
+                                                placeholder="@uiTerms[" lblSearchCandidates"]">
+                                            <div class="form-control-feedback">
+                                                <i class="icon-search4 text-muted font-size-base"></i>
+                                            </div>
+                                        </div>
+                                        <input type="submit" style="position: absolute; left: -9999px">
+                                    </form>
+                                </div>
+                                <style>
+                                    .twitter-typeahead,
+                                    .tt-hint,
+                                    .tt-input {
+                                        min-width: 100%;
+                                    }
+
+                                    .tt-menu {
+                                        width: auto;
+                                        max-width: 400px;
+                                        min-width: 312px !important;
+                                        overflow-y: auto;
+                                        overflow-x: hidden;
+                                    }
+
+                                    .dropdown-menu {
+                                        min-width: 100% !important;
+                                    }
+
+                                    typeahead-container {
+                                        width: 100% !important;
+                                    }
+
+                                    /*           #scrollable-dropdown-menu .tt-menu {
+                                max-height: 250px;
+                                overflow-y: auto;
+                                overflow-x:hidden;
+                                background-color: red;
+                            }*/
+                                </style>
+                                <script>
+
+                                    var candidates = new Bloodhound({
+                                        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+                                        queryTokenizer: Bloodhound.tokenizers.whitespace,
+                                        remote: {
+                                            url: '/data/candidate-name-search?q=%QUERY',
+                                            wildcard: '%QUERY'
+                                        }
+                                    });
+
+                                    $('#remoteContainer .typeahead').typeahead(null, {
+                                        limit: 10,
+                                        name: 'candidates',
+                                        display: 'fullName',
+                                        source: candidates,
+                                        templates: {
+                                            empty: [
+                                                '<div class="empty-message">',
+                                                '&nbsp;',
+                                                '</div>'
+                                            ].join('\n'),
+                                            suggestion: function () {
+                                                return Handlebars.compile('<div><a href="/candidate?id={{id}}"><span style="width:100%"><img src="{{photoUrl}}" class="rounded-circle" width="41" height="41"></span><span style="padding-left:10px"><strong>{{fullName}}</strong></span></a></div>');
+                                            }()
+                                        }
+                                    });
+                                </script>
+
+                                <div class="navbar-collapse collapse" id="navbar-buttons">
+
+                                    <div class="mb-3 mb-xl-0 ml-xl-auto">
+                                        <a href="~/purchase"
+                                            class="btn btn-outline border-white bg-teal-300 text-white font-weight-bold mr-2">@uiTerms["lblBuy"]</a>
+                                    </div>
+                                    <span class="badge badge-light font-size-base ml-0">@remainingCount</span>
+                                </div>
+
+                                <ul class="navbar-nav ml-xl-auto" lang="@userPrefs.uiLanguage">
+
+                                    <li class="nav-item dropdown ml-2" style="margin-left:0px">
+                                        <a href="#" id="topnav_settings"
+                                            class="navbar-nav-link dropdown-toggle pr-2 pl-2" data-toggle="dropdown">
+                                            <i class="icon-cog3"></i>
+                                            <span class="d-xl-none ml-2">Settings</span>
+                                        </a>
+
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            <a href="~/settings"
+                                                class="dropdown-item">@uiTerms["lblApplicationSettings"]</a>
+                                            <a href="~/users" class="dropdown-item">@uiTerms["mnoUsers"]</a>
+                                            <a href="~/organizations"
+                                                class="dropdown-item">@uiTerms["mnoOrganizations"]</a>
+                                            <a href="~/departments" class="dropdown-item">@uiTerms["mnoDepartments"]</a>
+                                            <a href="~/roles" class="dropdown-item">@uiTerms["lblManageRoles"]</a>
+                                            <a href="~/pipeline-stages-sets"
+                                                class="dropdown-item">@uiTerms["lblManagePipelineStagesSets"]</a>
+                                            <a href="~/questions"
+                                                class="dropdown-item">@uiTerms["mnoManageQuestions"]</a>
+                                            <a href="~/templates"
+                                                class="dropdown-item">@uiTerms["lblManageTemplates"]</a>
+                                            <a href="~/evaluation-forms"
+                                                class="dropdown-item">@uiTerms["lblManageEvaluationForms"]</a>
+                                            <a href="~/consents" class="dropdown-item">@uiTerms["lblManageConsents"]</a>
+                                            <a href="~/projects" class="dropdown-item">@uiTerms["lblManageProjects"]</a>
+                                            <a href="~/manage-integrations"
+                                                class="dropdown-item">@uiTerms["lblManageIntegrations"]</a>
+
+                                            @*<div class="dropdown-divider"></div>*@
+                                            @*<a href="~/export" class="dropdown-item">@uiTerms["mnoExportData"]</a>*@
+                                            @*<a href="~/billing-history"
+                                                class="dropdown-item">@uiTerms["mnoBillingHistory"]</a>*@
+                                        </div>
+                                    </li>
+
+
+
+                                    @*<li class="nav-item dropdown ml-0">
+                                        <a href="#" class="navbar-nav-link dropdown-toggle pl-2 pr-2"
+                                            data-toggle="dropdown">
+                                            @userPrefs.uiLanguage
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            <a href="~/Account/switch-language?lang=en" class="dropdown-item"><i
+                                                    class="@(userPrefs.uiLanguage==" en" ? "icon-check" : "icon-none"
+                                                    )"></i>@Utils.LanguageName("en")</a>
+                                            <a href="~/Account/switch-language?lang=el" class="dropdown-item"><i
+                                                    class="@(userPrefs.uiLanguage==" el" ? "icon-check" : "icon-none"
+                                                    )"></i>@Utils.LanguageName("el")</a>
+                                        </div>
+                                    </li>*@
+
+                                    @*<li class="nav-item dropdown ml-2" style="margin-left:0px">
+                                        <a href="#" id="topnav_settings"
+                                            class="navbar-nav-link dropdown-toggle pr-2 pl-2" data-toggle="dropdown">
+                                            <i class="icon-help"></i>
+                                            <span class="d-xl-none ml-2">Settings</span>
+                                        </a>
+
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            <a href="https://help.smartcv.co/" class="dropdown-item"
+                                                target="_blank">@uiTerms["lblHelpCenter"]</a>
+                                            <a href="~/new-support-request"
+                                                class="dropdown-item">@uiTerms["lblNewSupportRequest"]</a>
+                                        </div>
+                                    </li>*@
+
+
+
+
+                                    <li class="nav-item dropdown ml-0">
+                                        <a href="#" class="navbar-nav-link dropdown-toggle pl-2 pr-2"
+                                            data-toggle="dropdown">
+                                            <i class="icon-user"></i>
+                                            <span class="d-xl-none ml-2">User</span>
+                                        </a>
+
+                                        <div class="dropdown-menu dropdown-menu-right">
+                                            <div lang="@userPrefs.uiLanguage"
+                                                class="dropdown-header font-weight-semibold py-0 text-default text-uppercase font-size-xs line-height-xs mt-1">
+                                                @currentLogin.lFullName</div>
+                                            <div class="dropdown-divider opacity-75"></div>
+
+                                            <a href="~/account/change-password"
+                                                class="dropdown-item">@uiTerms["mnoChangePassword"]</a>
+                                            <a href="~/account/edit-user-details"
+                                                class="dropdown-item">@uiTerms["mnoEditUserDetails"]</a>
+                                            <div class="dropdown-divider"></div>
+                                            <a href="~/Account/switch-language?lang=en" class="dropdown-item"><i
+                                                    class="@(userPrefs.uiLanguage==" en" ? "icon-check" : "icon-none"
+                                                    )"></i>@Utils.LanguageName("en")</a>
+                                            <a href="~/Account/switch-language?lang=el" class="dropdown-item"><i
+                                                    class="@(userPrefs.uiLanguage==" el" ? "icon-check" : "icon-none"
+                                                    )"></i>@Utils.LanguageName("el")</a>
+                                            <div class="dropdown-divider"></div>
+
+                                            <a href="https://help.smartcv.co/" class="dropdown-item"
+                                                target="_blank">@uiTerms["lblHelpCenter"]</a>
+                                            <a href="~/new-support-request"
+                                                class="dropdown-item">@uiTerms["lblNewSupportRequest"]</a>
+                                            <div class="dropdown-divider"></div>
+                                            <a href="~/billing-history"
+                                                class="dropdown-item">@uiTerms["mnoBillingHistory"]</a>
+                                            <div class="dropdown-divider"></div>
+                                            <a href="~/Account/Logout" class="dropdown-item">@uiTerms["mnoLogout"]</a>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- /main navbar -->
+                    </div>
+                </div>
+            </div>
+
+            @RenderSection("pageheader", false)
+
+            @if (remainingCount == 0 & "/jobs
+            /upload-to-job.cshtml".Contains(Request.ServerVariables["SCRIPT_NAME"]))
+            {
+            <div class="alert alert-warning   col-6 align-self-center font-weight-semibold">
+                @Html.Raw(uiTerms["msgNoSmartcvsLeft"].Replace("{0}", "<a class='text-warning-700' href='/purchase'>" +
+                    uiTerms["lblBuyNow"] + "</a> "))
+            </div>
+            }
+
+            <!-- Page content -->
+
+            @RenderBody()
+
+            <!-- /page content -->
+            <!-- Footer -->
+            <div id="global_footer" class="navbar navbar-expand-lg navbar-light px-0" style="display:none">
+                <div class="container">
+                    <div class="text-center d-lg-none w-100">
+                        <button type="button" class="navbar-toggler dropdown-toggle" data-toggle="collapse"
+                            data-target="#navbar-footer">
+                            <i class="icon-unfold mr-2"></i>
+                            Footer
+                        </button>
+                    </div>
+                    <div class="navbar-collapse collapse" id="navbar-footer">
+                        <span class="navbar-text">
+                            &copy; 2019 <a href="#">SmartCV</a> by <a href="mailto:g.zafolias@gmail.com"
+                                target="_blank">George Zafolias</a>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <!-- /footer -->
+        </div>
+        @RenderSection("modals", required: false)
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-149290800-2"></script>
+
+    </div>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'UA-149290800-2');
+    </script>
+
+
+</body>
+
+</html>
+
+<script>
+
+    $(function () {
+
+        (function () {
+            $("body").addClass("navbar-top");
+            $(".layout-boxed .navbar:first").parent().parent().addClass("fixed-top");
+        })();
+
+        // fix profile_tabs flow over sticky menu
+        var setMarginTop = false;
+
+        $(window).scroll(function () {
+            var $e = $("#profile_tabs");
+            if ($e.length) {
+                setMarginTop = $e.attr("style").indexOf("top:") > -1 && $e.attr("style").indexOf("margin-top:") == -1;
+            }
+            if (setMarginTop) {
+                $e.attr("style", $e.attr("style") + "margin-top:" + $(".bg-teal-400.fixed-top").height() + "px;")
+            }
+        });
+    });
+
+    var HeartbeatInterval = -1;
+    function Heartbeat() {
+        url = "/heartbeat.ashx";
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", url, true);
+        xmlHttp.send();
+    }
+    function Logout() {
+        url = "/account/logout";
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", url, true);
+        xmlHttp.send();
+        setTimeout(function () {
+            location.href = location.href;
+        }, 300);
+    }
+
+    var HeartbeatInterval = setInterval(Heartbeat, 30000);
+    var LogoutInterval = setInterval(Logout, @userPrefs.userInactivityTimeout * 60 * 1000);
+</script>
+
+<script>
+    function myFunction() {
+        var x = document.getElementById("myLinks");
+        if (x.style.display === "block") {
+            x.style.display = "none";
+        } else {
+            x.style.display = "block";
+        }
+    }
+</script>

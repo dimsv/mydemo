@@ -1,0 +1,162 @@
+@{
+    if (IsPost)
+    {
+        int eId = Request.QueryString["eId"].AsInt(0);
+
+        if (eId > 0)
+        {
+            using (var db = Database.Open("smartcv"))
+            {
+                var currentPinnedValue = db.QueryValue("SELECT eIsPinned FROM events WHERE eId = @0", eId);
+
+                int newPinnedValue = (currentPinnedValue != null && Convert.ToInt32(currentPinnedValue) == 1) ? 0 : 1;
+
+                db.Execute("UPDATE events SET eIsPinned = @0 WHERE eId = @1", newPinnedValue, eId);
+            }
+        }
+    }
+}
+
+
+
+update applicaiotn project copy
+@using System.Dynamic;
+@using Newtonsoft.Json;
+@{
+  if (IsPost)
+  {
+    #region request variables
+    var applicationId = Request["applicationId"].AsInt(0);
+    var loginId = Request["loginId"].AsInt(0);
+    var projectId = Request["projectId"].AsInt(0);
+    #endregion request variables
+
+    //todo validate inactive project
+
+    dynamic currentLogin = null;
+    Database db = null;
+    dynamic response = new ExpandoObject();
+    Response.ContentType = "application/json";
+
+    #region security
+    if (loginId <= 0 || !WebSecurity.IsAuthenticated) { SmartCV.ReturnUnauthenticated(Response); }
+    db = Database.Open("smartcv");
+    currentLogin = db.QuerySingle(@"SELECT lCustomerId FROM logins WITH (NOLOCK)
+                JOIN roles ON (lRoleId=rlId) WHERE lId=@0", loginId);
+
+    if (currentLogin == null) { SmartCV.ReturnUnauthenticated(Response); }
+
+    #endregion security
+
+    var application = db.QuerySingle(@"SELECT a.*, c.cId  FROM applications a WITH (NOLOCK)
+JOIN jobs ON (aJobId=jId) JOIN organizations ON (jOrganizationId=oId)
+JOIN customers c ON (oCustomerId=cId) WHERE aId=@0", applicationId);
+
+    #region customer cross-check
+    if (application == null || currentLogin.lCustomerId != application.cId) { SmartCV.ReturnUnauthenticated(Response); }
+    #endregion customer cross-check
+
+    var userPrefs = SmartCV.GetUserPrefs(WebSecurity.CurrentUserId);
+    var customerPrefs = SmartCV.GetCustomerPrefs(application.cId);
+    var uiTerms = Utils.GetTerms(userPrefs.uiLanguage);
+
+    if (application.aProjectId == projectId)
+    {
+      response.result = "info";
+      response.resultInfo = application.aProjectId == 0 ? uiTerms["msgApplicationIsNotInAnyProject"] : uiTerms["msgApplicationIsAlreadyInThisProject"];
+      Response.Write(JsonConvert.SerializeObject(response));
+      Response.End();
+    }
+
+    db.Execute("UPDATE applications SET aProjectId=@0 WHERE aId=@1", projectId, applicationId);
+
+    int eventId = 0;
+
+    if (projectId > 0)
+    {
+      var projectName = db.QueryValue("SELECT prjName FROM projects WHERE prjId=@0 AND prjCustomerId=@1", projectId, currentLogin.lCustomerId);
+      db.Execute(@"INSERT INTO events
+(eType, eApplicationId, eCandidateId, eCreatedBy, eTextMetadata1, eNumericMetadata1, eJobId)
+VALUES (@0, @1, @2, @3, @4, @5, @6)",
+      SmartCV.eventTypeId_eventAddApplicationToProject,
+      applicationId,
+      application.aCandidateId,
+      loginId,
+      projectName,
+      projectId,
+      application.aJobId
+      );
+
+    }
+    else
+    {
+      var projectName = db.QueryValue("SELECT prjName FROM projects WHERE prjId=@0 AND prjCustomerId=@1", application.aProjectId, currentLogin.lCustomerId);
+      db.Execute(@"INSERT INTO events (eType, eApplicationId,
+      eCandidateId, eCreatedBy, eTextMetadata1,
+      eNumericMetadata1, eJobId) VALUES (@0, @1, @2, @3, @4, @5, @6)",
+      SmartCV.eventTypeId_eventRemoveCandidateFromStage,
+      applicationId,
+      application.aCandidateId,
+      loginId,
+      projectName,
+      application.aProjectId,
+      application.aJobId
+      );
+
+    }
+    eventId = (int)db.GetLastInsertId();
+    if (eventId > 0)
+    {
+      SQLReports.InsertRow(eventId);
+    }
+
+    //if (customerPrefs.isWorkflowAlertsEnabled == 1)
+    //{
+    //  var usersAssigned = db.Query("SELECT * FROM jobs_assignments WITH (NOLOCK) WHERE jaJobId=@0 AND jaAssignedTo<>@1", application.aJobId, loginId);
+
+    //  foreach (var userAssigned in usersAssigned)
+    //  {
+    //    SmartCV.SendEventNotificationToUser(userAssigned.jaAssignedTo, eventId, db);
+    //  }
+    //}
+
+    SmartCV.UpdateJobDuration(application.aJobId);
+    SmartCV.UpdateSearchIndexes(applicationId);
+
+    response.result = "success";
+    var responseText = JsonConvert.SerializeObject(response);
+    Response.Write(responseText);
+  }
+
+}
+
+
+update activity Pinned chtml
+@{
+    if (IsPost)
+    {
+        int eId = Request.QueryString["eId"].AsInt(0);
+
+        if (eId > 0)
+        {
+            using (var db = Database.Open("smartcv"))
+            {
+                var currentPinnedValue = db.QueryValue("SELECT eIsPinned FROM events WHERE eId = @0", eId);
+
+                int newPinnedValue = (currentPinnedValue != null && Convert.ToInt32(currentPinnedValue) == 1) ? 0 : 1;
+
+                db.Execute("UPDATE events SET eIsPinned = @0 WHERE eId = @1", newPinnedValue, eId);
+            }
+        }
+    }
+}
+
+
+
+
+
+Triantafillou Angeliki <a.triantafillou@stantonchase.com>
+Danae Doptoglou <d.doptoglou@stantonchase.com>
+Yianna Stavropoulou <y.stavropoulou@stantonchase.com>
+Kyriaki Kofini <k.kofini@stantonchase.com>
+Marina Vounatsou <m.vounatsou@stantonchase.com>

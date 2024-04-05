@@ -4,3 +4,18 @@ SELECT SUM(tTotalParses) as totalParses,
  WITH (NOLOCK) 
  JOIN products ON (tProductId=pId) 
  WHERE tCustomerId=@0 AND tStatus=3 AND pType=1", currentCustomerId);
+
+
+
+
+
+ICT Risk & Security Supervision & Auditing Officer
+Expert οn Regulatory Framework
+Insurance Compliance Officer
+Insurance Investment Officer
+Insurance Risk Management Officer
+Insurance Inspections Officer
+Actuarial Officer
+Legal Expert on Insurance and Occupational Pensions
+
+

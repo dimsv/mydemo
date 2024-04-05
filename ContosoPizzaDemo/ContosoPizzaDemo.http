@@ -1,0 +1,6 @@
+@ContosoPizzaDemo_HostAddress = http://localhost:5166
+
+GET {{ContosoPizzaDemo_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
