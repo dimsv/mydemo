@@ -1,0 +1,130 @@
+
+            <div class="row mt-2">
+                @if (projectsEnabled)
+                {
+                    <!--#region projects-->
+                    <div class="row btn-group" data-toggle="tooltip" data-placement="top" title="@uiTerms["lblAddApplicationToProject"]">
+                        
+                        <button id="create-btn" type="button" class="btn btn-light">@uiTerms["lblProject"]: 
+                            <strong>@(result._source.projectId == null || result._source.projectId == 0 ? uiTerms["lblNone"] : result._source.projectName)</strong>
+                        </button>
+                        
+                        <button type="button" class="btn btn btn-light dropdown-toggle" data-toggle="dropdown"></button>
+                        
+                        <div class="dropdown-menu dropdown-menu-left" style="z-index:1120">
+                            @{var addToProjectEnabled = ((IEnumerable<dynamic>)projects).Where(x => x.prjId != (result._source.projectId == null ? 0 : result._source.projectId)).Count() > 0; }
+                            @if (addToProjectEnabled)
+                            {
+                                <div class="dropdown-header">@uiTerms["mnoAddTo"]:</div>
+                                <div class="dropdown-divider"></div>
+
+                                foreach (var project in projects)
+                                {
+                                    if (result._source.projectId != project.prjId)
+                                    {
+                                        <div><a href="javascript:addToProject(@result._id,@project.prjId)" class="dropdown-item">@project.prjName</a></div>
+                                    }
+                                }
+                            }
+                            @if (result._source.projectId > 0)
+                            {
+                                if (addToProjectEnabled)
+                                {<div class="dropdown-divider"></div>}
+                                <div><a href="javascript:addToProject(@result._id,0)" class="dropdown-item">@uiTerms["mnoRemoveApplicationFromProject"]</a></div>
+                            }
+
+
+                        </div>
+                    </div>
+
+                    <script>
+                        function addToProject(applicationId, project) {
+                            $.post('/data/add-application-to-project-json?applicationId=' + applicationId + '&projectId=' + project + '&loginId=@WebSecurity.CurrentUserId',
+                              function (response) {
+
+                                updateApplication(applicationId);
+                                initProjects(function () {
+                                           new PNotify({
+                                      title: project > 0 ? '@uiTerms["msgApplicationAddedToProject"]' : '@uiTerms["msgApplicationRemovedFromProject"]',
+                                    icon: 'icon-checkmark3',
+                                    type: 'success'
+                                           });
+
+                                  if (project <= 0) { window.location.reload(false); }
+
+
+                                });
+                                   //GetJobProjects(true, function () {
+
+                                   //});
+
+
+                                  @*if (project > 0) {
+                                    new PNotify({
+                                      title: '@uiTerms["msgApplicationAddedToProject"]',
+                                      icon: 'icon-checkmark3',
+                                      type: 'success'
+                                    });
+                                  }
+                                  else {
+
+                                    GetJobProjects(true, function () {
+                                        new PNotify({
+                                        title: '@uiTerms["msgApplicationRemovedFromProject"]',
+                                        icon: 'icon-checkmark3',
+                                        type: 'success'
+                                      });
+                                    });
+                                  }*@
+
+                            });
+                        }
+                    </script>
+                    <!--#endregion projects-->
+                 }   
+
+                <div class="row btn-group mt-1" data-toggle="tooltip" data-placement="top" title="@uiTerms["lblMoveCandidateToStage"].Replace("{0}", uiTerms[Utils.GetGenderedTerm("lblCandidateLiteralPossessive", result._source.gender)])">
+                    
+                    <button id="create-btn" type="button" class="btn btn-light ">@uiTerms["lblStage"]: 
+                        <strong>@(result._source.pipelineStageId == 0 ? uiTerms["lblNone"] : result._source.pipelineStageName)</strong>
+                    </button>
+                    
+                    <button type="button" class="btn btn btn-light dropdown-toggle " data-toggle="dropdown"></button>
+                    
+                    <div class="dropdown-menu dropdown-menu-right" style="z-index:1120">
+                        <div class="dropdown-header">@uiTerms["mnoMoveTo"]:</div>
+                        <div class="dropdown-divider"></div>
+                        @{
+                            var rolePipelineStages = db.Query("SELECT * FROM workflows WHERE wfRoleId=@0", currentLogin.lRoleId);
+                            var roleStages = new List<int>();
+
+                            foreach (var rolePipelineStage in rolePipelineStages)
+                            {
+                                roleStages.Add(rolePipelineStage.wfPipelineStageId);
+                            }
+
+                            var pipelineStages = db.Query(@"SELECT DISTINCT ps.* FROM pipeline_stages ps
+                                                                                                                               LEFT JOIN jobs j ON j.jPipelineStagesSetId=ps.psSetId
+                                                                                                                               WHERE psCustomerid=@0 AND psId<>@1 AND psIsActive=1 AND j.jId=@2
+                                                                                                                               ORDER BY psRank",
+                                                           result._source.customerId, result._source.pipelineStageId, result._source.jobId);
+
+                            foreach (var pipelineStage in pipelineStages)
+                            {
+                                if ((customerPrefs.isStrictWorkflowEnabled == 0) | (currentLogin.rlIsAdmin == 1) | (customerPrefs.isStrictWorkflowEnabled == 1 & roleStages.Contains(pipelineStage.psId)))
+                                {
+                                    <div><a href="javascript:moveToStage(@result._id,@pipelineStage.psId)" class="dropdown-item">@pipelineStage.psName</a></div>
+                                }
+                            }
+
+                            if ((result._source.pipelineStageId > 0) & ((customerPrefs.isStrictWorkflowEnabled == 0) | (currentLogin.rlIsAdmin == 1) | (customerPrefs.isStrictWorkflowEnabled == 1 & roleStages.Count > 0)))
+                            {
+                                <div class="dropdown-divider"></div>
+                                <div><a href="javascript:moveToStage(@result._id,0)" class="dropdown-item">@uiTerms["mnoRemovePipelineStage"]</a></div>
+                            }
+
+                        }
+                    </div>
+                </div>
+
+            </div>
