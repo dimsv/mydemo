@@ -1,0 +1,2168 @@
+@using System;
+@using System.IO;
+@using System.Web.Util
+@using RestSharp;
+
+@{
+  #region security
+  if (!WebSecurity.IsAuthenticated)
+  {
+    Response.Redirect("~/account/login?ReturnUrl=" + Request.Url.ToString());
+  }
+  #endregion security
+}
+
+@section pageheader {
+    @PageHelpers.PageHeader(Page.Title)
+}
+
+<script src="~/Scripts/jquery.validate.min.js" type="text/javascript"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js" type="text/javascript"></script>
+
+<script src="~/global_assets/js/plugins/forms/styling/uniform.min.js"></script>
+<script src="~/global_assets/js/demo_pages/login.js"></script>
+<script src="~/assets/js/app.js"></script>
+<script src="~/global_assets/js/demo_pages/form_checkboxes_radios.js"></script>
+
+<link href="~/Scripts/customscrollbar/jquery.mCustomScrollbar.css" rel="stylesheet" />
+
+
+<!-- Pane includes -->
+
+<script src="~/Scripts/jquery-circle-progress/dist/circle-progress.min.js"></script>
+<script src="~/Scripts/star-rating-svg/jquery.star-rating-svg.min.js"></script>
+<link href="~/Scripts/star-rating-svg/star-rating-svg.css" rel="stylesheet" />
+
+<link href="~/Scripts/tagsinput/bootstrap-tagsinput.css" rel="stylesheet" />
+<link href="~/Scripts/tagsinput/bootstrap-tagsinput-typeahead.css" rel="stylesheet" />
+
+<script src="~/Scripts/tagsinput/bootstrap-tagsinput.min.js"></script>
+
+<script src="~/global_assets/js/plugins/forms/inputs/typeahead/typeahead.bundle.min.js"></script>
+@*<script src="http://malsup.github.com/jquery.form.js"></script>*@
+<script src="~/Scripts/jquery.form.js"></script>
+<script src="~/global_assets/js/plugins/notifications/pnotify.min.js"></script>
+<script src="~/Scripts/jquery-ias.min.js"></script>
+
+@{
+
+  Users.CheckLogin("ALL_CANDIDATES");
+
+  var q = Request["q"];
+  var queryText = string.IsNullOrEmpty(q) ? string.Empty : Server.UrlDecode(Server.UrlEncode(q)).ToString().Trim();
+  var averageMatchScore = Request["averageMatchScore"];
+  var jobTitles = Request["jobTitles"];
+  var organizationNames = Request["organizationNames"];
+  var departmentNames = Request["departmentNames"];
+  var internalSourceNames = Request["internalSourceNames"];
+  var externalSources = Request["externalSources"];
+  var pipelineStageNames = Request["pipelineStageNames"];
+  var administrativeArea = Request["administrativeArea"];
+  var isEmployed = Request["isEmployed"];
+  var employers = Request["employers"];
+  var employersTxt = Request["employersTxt"];
+  var positionTitles = Request["positionTitles"];
+  var positionTitlesTxt = Request["positionTitlesTxt"];
+  var jobExperienceType = Request["jobExperienceType"];
+  var currentManagementLevel = Request["currentManagementLevel"];
+  var executiveType = Request["executiveType"];
+  var schoolTypes = Request["schoolTypes"];
+  var degreeTypes = Request["degreeTypes"];
+  var languages = Request["languages"];
+  var monthsOfWorkExperience = Request["monthsOfWorkExperience"];
+  var monthsOfManagementExperience = Request["monthsOfManagementExperience"];
+  var tags = Request["tags"];
+  var answerTags =Request["answerTags"];
+
+  var skills = Request["skills"];
+  var sortOrder = Request["sort"];
+  var projectNames = Request["projectNames"];
+
+  var db = Database.Open("smartcv");
+
+
+
+
+
+  var currentLogin = db.QuerySingle("SELECT * FROM logins WITH (NOLOCK) JOIN customers ON (lCustomerId=cId) WHERE lId=@0", WebSecurity.CurrentUserId);
+  var currentCustomerId = currentLogin.lCustomerId;
+
+  var userPrefs = SmartCV.GetUserPrefs(WebSecurity.CurrentUserId);
+  var uiTerms = Utils.GetTerms(userPrefs.uiLanguage);
+
+  Layout = "~/_Layout.cshtml";
+  Page.Title = uiTerms["candidates"] + " - SmartCV";
+
+  #region projects
+  var projects = db.QuerySingle(@"SELECT TOP 1 prj.* FROM projects prj
+                              JOIN customers c ON c.cId = prj.prjCustomerId
+                              WHERE prjCustomerId=@0 AND prjIsActive=1
+                              ORDER BY prjName", currentCustomerId);
+
+  var projectsEnabled = projects != null;
+  #endregion projects
+
+  var page = Request["page"].AsInt(1);
+
+  var pageSize = 30;
+  var totalPages = 0;
+  //var linkUrl = "";
+  // int count = 0;
+
+  Dictionary<string, string> sortOptions = new Dictionary<string, string>();
+  sortOptions.Add("_score:desc", uiTerms["lblMostRelevant"]);
+  sortOptions.Add("lastAppliedDateTime:desc", uiTerms["lblSortNewest"]);
+  sortOptions.Add("averageMatchScore:desc", uiTerms["lblSortMatchScore"]);
+  sortOptions.Add("averageRating:desc", uiTerms["lblSortAverageRating"]);
+  sortOptions.Add("lastAppliedDateTime:asc", uiTerms["lblSortOldest"]);
+  sortOptions.Add("monthsOfWorkExperience:desc", uiTerms["lblSortLongestExperience"]);
+  sortOptions.Add("monthsOfWorkExperience:asc", uiTerms["lblSortShortestExperience"]);
+  sortOptions.Add("maxDegreeLevel:desc", uiTerms["lblSortHighestEducationLevel"]);
+  sortOptions.Add("averageMonthsPerEmployer:desc", uiTerms["lblSortLongestPerEmployerExperience"]);
+  sortOptions.Add("averageMonthsPerEmployer:asc", uiTerms["lblSortShortestPerEmployerExperience"]);
+  sortOptions.Add("monthsOfManagementExperience:desc", uiTerms["lblSortLongestMgmtExperience"]);
+  sortOptions.Add("monthsOfManagementExperience:asc", uiTerms["lblSortShortestMgmtExperience"]);
+  sortOptions.Add("highestManagementScore:desc", uiTerms["lblSortHighestMgmtLevel"]);
+  sortOptions.Add("highestManagementScore:asc", uiTerms["lblSortLowestMgmtLevel"]);
+  sortOptions.Add("isEmployed:desc", uiTerms["lblSortIsEmployed"]);
+  sortOptions.Add("isEmployed:asc", uiTerms["lblSortIsUnemployed"]);
+  sortOptions.Add("numOfLanguages:desc", uiTerms["lblSortNumOfLanguages"]);
+
+  IDictionary<string, string> filterTerms = new Dictionary<string, string>();
+  filterTerms.Add("[0 TO 0.9]", "lblNoWorkExperience");
+  filterTerms.Add("[1 TO 36]", "lblUpTo3Years");
+  filterTerms.Add("[36 TO 60]", "lbl3To5Years");
+  filterTerms.Add("[60 TO 120]", "lbl5To10Years");
+  filterTerms.Add("[120 TO 180]", "lbl10To15Years");
+  filterTerms.Add("[180 TO *]", "lblOver15Years");
+  filterTerms.Add("[0 TO 25]", "lblMatchScore0to25");
+  filterTerms.Add("[26 TO 50]", "lblMatchScore26to50");
+  filterTerms.Add("[51 TO 75]", "lblMatchScore51to75");
+  filterTerms.Add("[76 TO 100]", "lblMatchScore76to100");
+
+  Func<string, string, string> filterMatch = (member, defaultValue) =>
+  {
+    var value = Utils.ValueOrEmptyString((dynamic)userPrefs, member);
+    var result = string.Empty;
+    switch (value.ToString().ToLower())
+    {
+      case "any":
+        result = " OR ";
+        break;
+      case "all":
+        result = " AND ";
+        break;
+      default:
+        result = defaultValue;
+        break;
+    }
+    return result;
+  };
+
+  var offset = (page - 1) * pageSize;
+
+  if (string.IsNullOrEmpty(sortOrder))
+  {
+    if (string.IsNullOrEmpty(queryText))
+    {
+      sortOrder = "lastAppliedDateTime:desc";
+    }
+    else
+    {
+      sortOrder = "_score:desc";
+    }
+
+  }
+
+  var sortField = sortOrder.Split(':')[0];
+  var sortLine = "";
+
+
+  var mainQuery = "";
+
+  if (!String.IsNullOrEmpty(averageMatchScore))
+  {
+    mainQuery += " AND (";
+    foreach (var averageMatchScoreKey in averageMatchScore.Split(','))
+    {
+      mainQuery += @"averageMatchScore:""" + averageMatchScoreKey + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(jobTitles))
+  {
+    mainQuery += " AND (";
+    foreach (var jobTitle in jobTitles.Split(','))
+    {
+      mainQuery += @"jobTitles:""" + jobTitle + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(organizationNames))
+  {
+    mainQuery += " AND (";
+    foreach (var organizationName in organizationNames.Split(','))
+    {
+      mainQuery += @"organizationNames:""" + organizationName + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(departmentNames))
+  {
+    mainQuery += " AND (";
+    foreach (var departmentName in departmentNames.Split(','))
+    {
+      mainQuery += @"departmentNames:""" + departmentName + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(internalSourceNames))
+  {
+    mainQuery += " AND (";
+    foreach (var internalSourceName in internalSourceNames.Split(','))
+    {
+      mainQuery += @"internalSourceNames:""" + internalSourceName + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(externalSources))
+  {
+    mainQuery += " AND (";
+    foreach (var externalSource in externalSources.Split(','))
+    {
+      mainQuery += @"externalSources:""" + externalSource + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(pipelineStageNames))
+  {
+    mainQuery += " AND (";
+    foreach (var pipelineStageName in pipelineStageNames.Split(','))
+    {
+      mainQuery += @"pipelineStageNames:""" + pipelineStageName + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(administrativeArea))
+  {
+    mainQuery += " AND (";
+    foreach (var administrativeAreaKey in administrativeArea.Split(','))
+    {
+      mainQuery += @"administrativeArea:""" + administrativeAreaKey + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(employers))
+  {
+    mainQuery += " AND (";
+    foreach (var employer in employers.Split(','))
+    {
+      mainQuery += @"employers:""" + employer + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(employersTxt))
+  {
+    mainQuery += @" AND (employersTxt: """ + employersTxt + @""") ";
+  }
+
+
+  if (!String.IsNullOrEmpty(positionTitles))
+  {
+    mainQuery += " AND (";
+    foreach (var positionTitle in positionTitles.Split(','))
+    {
+      mainQuery += @"positionTitles:""" + positionTitle + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(positionTitlesTxt))
+  {
+    mainQuery += @" AND (positionTitlesTxt: """ + positionTitlesTxt + @""") ";
+  }
+
+  if (!String.IsNullOrEmpty(isEmployed))
+  {
+    mainQuery += " AND (";
+    foreach (var isEmployedKey in isEmployed.Split(','))
+    {
+      mainQuery += @"isEmployed:""" + isEmployedKey + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!string.IsNullOrEmpty(tags))
+  {
+    mainQuery += " AND (";
+    foreach (var tag in tags.Split(','))
+    {
+      mainQuery += @"tags:""" + tag + "\"" +  filterMatch("filterMatchTags", " AND ");
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(answerTags))
+  {
+    mainQuery += " AND (";
+    foreach (var answerTag in answerTags.Split(','))
+    {
+      mainQuery += @"answerTags:""" + Utils.EscapeElasticQuery(answerTag) + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(jobExperienceType))
+  {
+    mainQuery += " AND (";
+    foreach (var jobExperienceTypeKey in jobExperienceType.Split(','))
+    {
+      mainQuery += @"jobExperienceType:""" + jobExperienceTypeKey + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(currentManagementLevel))
+  {
+    mainQuery += " AND (";
+    foreach (var currentManagementLevelKey in currentManagementLevel.Split(','))
+    {
+      mainQuery += @"currentManagementLevel:""" + currentManagementLevelKey + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(executiveType))
+  {
+    mainQuery += " AND (";
+    foreach (var executiveTypeKey in executiveType.Split(','))
+    {
+      mainQuery += @"executiveType:""" + executiveTypeKey + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(schoolTypes))
+  {
+    mainQuery += " AND (";
+    foreach (var schoolType in schoolTypes.Split(','))
+    {
+      mainQuery += @"schoolTypes:""" + schoolType + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(degreeTypes))
+  {
+    mainQuery += " AND (";
+    foreach (var degreeType in degreeTypes.Split(','))
+    {
+      mainQuery += @"degreeTypes:""" + degreeType + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(languages))
+  {
+    mainQuery += " AND (";
+    foreach (var language in languages.Split(','))
+    {
+      mainQuery += @"languages:""" + language +  "\""  +  filterMatch("filterMatchLanguages", " AND ");
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(monthsOfWorkExperience))
+  {
+    mainQuery += " AND (";
+    foreach (var monthsOfWorkExperienceKey in monthsOfWorkExperience.Split(','))
+    {
+      mainQuery += @"monthsOfWorkExperience:" + monthsOfWorkExperienceKey + " OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  if (!String.IsNullOrEmpty(monthsOfManagementExperience))
+  {
+    mainQuery += " AND (";
+    foreach (var monthsOfManagementExperienceKey in monthsOfManagementExperience.Split(','))
+    {
+      mainQuery += @"monthsOfManagementExperience:" + monthsOfManagementExperienceKey + " OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+
+
+  if (!string.IsNullOrEmpty(skills))
+  {
+    mainQuery += " AND (";
+    foreach (var skill in skills.Split(','))
+    {
+      mainQuery += "skills:" + skill + filterMatch("filterMatchSkills"," AND ");//default value is AND
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 5) + ")";
+  }
+
+  if (projectsEnabled && !string.IsNullOrEmpty(projectNames))
+  {
+    mainQuery += " AND (";
+    foreach (var psn in projectNames.Split(','))
+    {
+      mainQuery += @"projectNames:""" + psn + @""" OR ";
+    }
+    mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+  }
+
+  //exclude withdrawn
+  mainQuery += " AND isWithdrawn:0 ";
+
+  //exclude expired
+  var currentDateTime = DateTime.UtcNow.ToString("yyyy-MM-dd");
+  mainQuery += $" AND (expiryDate:{{{currentDateTime} TO *}})";
+
+  @*
+  if (!string.IsNullOrEmpty(queryText))
+  {
+    //and --> caps
+    /*AND OR NOT - + ( ) “ */
+    var isSimpleQuery = queryText.IndexOf("~") == -1 && queryText.IndexOf(" AND ") == -1 && queryText.IndexOf(" OR ") == -1 &&
+                        queryText.IndexOf(" NOT ") == -1 &&
+                        queryText.IndexOf(" and ") == -1 && queryText.IndexOf(" or ") == -1 && queryText.IndexOf(" not ") == -1 &&
+                        queryText.IndexOf("-") == -1 && queryText.IndexOf("+") == -1 && queryText.IndexOf("(") == -1 &&
+                        queryText.IndexOf(")") == -1 && queryText.IndexOf("“") == -1 && queryText.IndexOf("\"") == -1;
+
+    var searchFields= new string[]{"fullName","fullNameSrch","currentEmployer","currentRole",
+                                  "recentRole","employersTxt","positionTitlesTxt","skills" };
+
+    //fullName 10  fullNameSrch 10 currentEmployer 8 currentRole 8 recentRole 8 employersTxt 5
+    //positionTitlesTxt 5 skills   2  cvText 1
+
+    //(fullName:(c# AND asp.net)^10 OR fullNameSrch:(c# AND asp.net)^10 OR ..... OR cvText:("C# asp.net"~5)^1)
+    var phraseSlop = userPrefs.filterPhraseSearchSensitivity == null ? 5 : userPrefs.filterPhraseSearchSensitivity;
+
+    if (isSimpleQuery) //phrase
+    {
+      //var searchString = searchFields.Except(new string[]{"cvText" }).Aggregate((a, b) => $"{a}:({queryText})^10 OR {b}:({queryText})^10");
+      //searchString = $"({searchString} OR cvText:({queryText})^1)";
+
+      //var queryTextAND = "\"" + string.Join("\" AND \"", Utils.EscapeElasticQuery(queryText).Split(' ')) + "\"";
+
+      var queryTextAND =  string.Join(" AND ", Utils.EscapeElasticQuery(queryText).Split(' '));
+
+
+
+      //var searchString = string.Join($":({queryTextAND})^10 OR ", searchFields);
+      //searchString += $":({queryTextAND})^2 ";
+      //searchString = $"({searchString} OR cvText:(\"{Utils.EscapeElasticQuery(queryText)}\"~5)^1)";
+
+  
+
+      var searchString = $@"( fullName:({queryTextAND})^10 OR fullNameSrch:({queryTextAND})^10 OR currentEmployer:({queryTextAND})^8 OR
+                          currentRole:({queryTextAND})^8 OR recentRole:({queryTextAND})^8 OR employersTxt:({queryTextAND})^5 OR 
+                          positionTitlesTxt:({queryTextAND})^5 OR skills:({queryTextAND})^2 OR cvText:(""{queryTextAND}""~{phraseSlop})^1 )";
+      //positionTitlesTxt:({queryTextAND})^5 OR skills:({queryTextAND})^2 OR cvText:(""{Utils.EscapeElasticQuery(queryText)}""~{phraseSlop})^1 )";
+      //OR cvText:(""{Utils.EscapeElasticQuery(queryText)}""~{phraseSlop})^1 )";
+      mainQuery += $" AND ({searchString})";// + "&slop=" + phraseSlop;
+      //Response.Write($"<script>console.clear();console.log(\"{mainQuery}\")</script>");
+      //mainQuery += $" AND (\"{Utils.EscapeElasticQuery(queryText)}\"~5)";//$" AND ({queryText})";
+    }
+    else
+    {
+
+      //var searchString = string.Join($":({Utils.EscapeElasticQuery(queryText)})^10 OR ", searchFields);
+      //searchString += $":({Utils.EscapeElasticQuery(queryText)})^2 ";
+      //searchString = $"({searchString} OR cvText:({Utils.EscapeElasticQuery(queryText)})^1)".Replace(" and ", "AND").Replace(" or ", "OR");
+
+      var escapedQuery = Utils.EscapeElasticQuery(queryText).Replace(" and ", " AND ").Replace(" or ", " OR ");
+      var searchString = $@"( fullName:({escapedQuery})^10 OR fullNameSrch:({escapedQuery})^10 OR currentEmployer:({escapedQuery})^8 OR 
+                        currentRole:({escapedQuery})^8 OR recentRole:({escapedQuery})^8 OR employersTxt:({escapedQuery})^5 OR 
+                        positionTitlesTxt:({escapedQuery})^5 OR skills:({escapedQuery})^2 ";
+      var containsSlop = escapedQuery.IndexOf("~") > -1;
+      if (!containsSlop)
+      {
+        searchString += $@" OR cvText:(""{escapedQuery}""~{phraseSlop})^1 )";
+      }
+      else
+      {
+        searchString += $@" OR cvText: ({ escapedQuery})^1 )";
+      }
+
+      mainQuery += $" AND ({searchString})";
+      //Response.Write($"<script>console.clear();console.log(\"{mainQuery}\")</script>");
+      //mainQuery += $" AND ({searchString})";//$" AND ({queryText})";
+    }
+
+  }
+  *@
+
+
+if (!string.IsNullOrEmpty(queryText))
+{
+  var escapedQuery = Utils.EscapeElasticQuery(queryText).Replace(" and ", " AND ").Replace(" or ", " OR ");
+
+  mainQuery += $@" AND ({escapedQuery})";//cvText
+}
+
+var fields = "lastAppliedDateTime,fullName,initials,averageMatchScore,averageRating,hasPhoto,parsedCvGuid,isEmployed,currentEmployer,currentRole,recentRole,administrativeArea,countryCode,phone,email," +
+        "monthsOfWorkExperience,averageMonthsPerEmployer,monthsOfManagementExperience,highestManagementScore,isEmployed,maxDegreeType,tags,isWithdrawn,expiryDate";
+
+if (projectsEnabled) { fields += ",projectNames"; }
+
+var query = "size=" + pageSize.ToString() + "&from=" + offset.ToString() +
+      "&q=customerId:" + currentCustomerId.ToString() + " " + (mainQuery) +
+      "&sort=" + sortOrder + "&_source=" + fields;// + "&default_operator=AND";
+
+var queryAll = "q=customerId:" + currentCustomerId.ToString() + " " + mainQuery;// + "&default_operator=AND";
+var jsonAll = Json.Decode(Utils.Elastic("candidates/_count", queryAll, Method.GET, "{}"));
+
+//Response.Write($"<script>console.clear();console.log(\"{query}\")</script>");
+
+var resp = Utils.Elastic("candidates/_search", (query), Method.POST, File.ReadAllText(Server.MapPath("~/app_data/aggs.json")));
+var json = Json.Decode(resp);
+
+if (json != null && json.hits != null && json.hits.total != null && json.hits.total.value!= null)
+{
+  totalPages = (int)Math.Ceiling((double)json.hits.total.value / pageSize);
+}
+
+
+
+var aggs = resp;
+var aggsJson = Json.Decode(aggs);
+
+
+}
+<script>
+    $("#breadcrumb").html('<a href="/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> @uiTerms["lblHome"]</a><a href="#" class="breadcrumb-item active"> @uiTerms["candidates"]</a>')
+    $("#topnav_candidates").addClass("active");
+</script>
+
+
+
+@*<script>
+  console.clear(); 
+  console.log("@Html.Raw(mainQuery.Replace("\"", "'").Replace("\r\n", "").Replace("        ", ""))");
+</script>*@
+<form action="~/candidates">
+
+    <div class="page-header container" style="display:none">
+        <div class="page-header-content container  ">
+            <div class="form-row col-lg-10">
+                <div class="form-group col-lg-5">
+                    <input name="q" value="@queryText" type="text" placeholder="@uiTerms["lblSearchCandidates"]" class="form-control">
+                </div>
+                <div class="form-group col-lg-3">
+                    <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content container pt-0">
+
+
+
+        @if (json.hits != null && json.hits.total != null && json.hits.total.value > 0)
+        {
+            <!-- Main sidebar -->
+            <style>
+                .sidenav {
+                    height: 670px;
+                    position: fixed;
+                    z-index: 1;
+                    top: 111px;
+                    left: 0;
+                    overflow-x: hidden;
+                    padding-top: 20px;
+                }
+              .form-check:not(.form-check-inline) {
+                margin-bottom: 0!important;
+                padding-bottom: .5rem;
+              }
+            </style>
+
+
+
+            <div id="sidebar" class="sidebar sidebar-light sidebar-main sidebar-expand-md align-self-start col-lg-3 sidenav px-0 pt-0  ">
+
+
+                @if (!string.IsNullOrEmpty("skills"))
+                {
+                    <input type="hidden" name="skills" value="@skills">
+                }
+
+
+                @if (!String.IsNullOrEmpty(sortOrder))
+                {
+                    <input type="hidden" name="sort" value="@sortOrder">
+                }
+
+                <div class="sidebar-content">
+
+                    <!-- Filter -->
+                    <div class="card">
+                        <div class="card-header bg-transparent header-elements-inline pb-1">
+                            <span class="font-size-lg font-weight-semibold">@uiTerms["lblWorkExperience"]</span>
+                            <div class="header-elements">
+
+                            </div>
+                        </div>
+                        <div class="card-body pb-0">
+                          <fieldset>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3">@Utils.GreekUpper(uiTerms["lblWorkExperienceDuration"])</legend>
+                            <div class="form-group mb-1" onmouseover="$('#monthsOfWorkExperience_submit').css('visibility','visible')" onmouseout="$('#monthsOfWorkExperience_submit').css('visibility','hidden')">
+                              @if (aggsJson.aggregations.monthsOfWorkExperience.buckets[0].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfWorkExperience" type="checkbox" value="[0 TO 0.9]" class="form-input-styled" @(NullToString(monthsOfWorkExperience).Contains("[0 TO 0.9]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lblNoWorkExperience"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfWorkExperience.buckets[0].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+
+                              @if (aggsJson.aggregations.monthsOfWorkExperience.buckets[1].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfWorkExperience" type="checkbox" value="[1 TO 36]" class="form-input-styled" @(NullToString(monthsOfWorkExperience).Contains("[1 TO 36]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lblUpTo3Years"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfWorkExperience.buckets[1].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+                              @if (aggsJson.aggregations.monthsOfWorkExperience.buckets[2].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfWorkExperience" type="checkbox" value="[36 TO 60]" class="form-input-styled" @(NullToString(monthsOfWorkExperience).Contains("[36 TO 60]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lbl3To5Years"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfWorkExperience.buckets[2].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+                              @if (aggsJson.aggregations.monthsOfWorkExperience.buckets[3].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfWorkExperience" type="checkbox" value="[60 TO 120]" class="form-input-styled" @(NullToString(monthsOfWorkExperience).Contains("[60 TO 120]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lbl5To10Years"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfWorkExperience.buckets[3].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+                              @if (aggsJson.aggregations.monthsOfWorkExperience.buckets[4].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfWorkExperience" type="checkbox" value="[120 TO 180]" class="form-input-styled" @(NullToString(monthsOfWorkExperience).Contains("[120 TO 180]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lbl10To15Years"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfWorkExperience.buckets[4].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+                              @if (aggsJson.aggregations.monthsOfWorkExperience.buckets[5].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfWorkExperience" type="checkbox" value="[180 TO *]" class="form-input-styled" @(NullToString(monthsOfWorkExperience).Contains("[180 TO *]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lblOver15Years"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfWorkExperience.buckets[5].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+                              <div id="monthsOfWorkExperience_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 monthsOfManagementExperience-filter">@Utils.GreekUpper(uiTerms["lblMgmtExperienceDuration"])</legend>
+                            <div class="form-group mb-1 monthsOfManagementExperience-filter" onmouseover="$('#monthsOfManagementExperience_submit').css('visibility','visible')" onmouseout="$('#monthsOfManagementExperience_submit').css('visibility','hidden')">
+                              @{
+                                var monthsOfManagementExperienceTotalBucketCount =
+                                    aggsJson.aggregations.monthsOfManagementExperience.buckets[0].doc_count +
+                                    aggsJson.aggregations.monthsOfManagementExperience.buckets[1].doc_count +
+                                    aggsJson.aggregations.monthsOfManagementExperience.buckets[2].doc_count +
+                                    aggsJson.aggregations.monthsOfManagementExperience.buckets[3].doc_count +
+                                    aggsJson.aggregations.monthsOfManagementExperience.buckets[4].doc_count +
+                                    aggsJson.aggregations.monthsOfManagementExperience.buckets[5].doc_count;
+
+                              }
+                              @if (aggsJson.aggregations.monthsOfManagementExperience.buckets[0].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfManagementExperience" type="checkbox" value="[0 TO 0]" class="form-input-styled" @(NullToString(monthsOfManagementExperience).Contains("[0 TO 0]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lblNoMgmtExperience"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfManagementExperience.buckets[0].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+                              @if (aggsJson.aggregations.monthsOfManagementExperience.buckets[1].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfManagementExperience" type="checkbox" value="[1 TO 36]" class="form-input-styled" @(NullToString(monthsOfManagementExperience).Contains("[1 TO 36]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lblUpTo3Years"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfManagementExperience.buckets[1].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+                              @if (aggsJson.aggregations.monthsOfManagementExperience.buckets[2].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfManagementExperience" type="checkbox" value="[36 TO 60]" class="form-input-styled" @(NullToString(monthsOfManagementExperience).Contains("[36 TO 60]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lbl3To5Years"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfManagementExperience.buckets[2].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+                              @if (aggsJson.aggregations.monthsOfManagementExperience.buckets[3].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfManagementExperience" type="checkbox" value="[60 TO 120]" class="form-input-styled" @(NullToString(monthsOfManagementExperience).Contains("[60 TO 120]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lbl5To10Years"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfManagementExperience.buckets[3].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+                              @if (aggsJson.aggregations.monthsOfManagementExperience.buckets[4].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfManagementExperience" type="checkbox" value="[120 TO 180]" class="form-input-styled" @(NullToString(monthsOfManagementExperience).Contains("[120 TO 180]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lbl10To15Years"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfManagementExperience.buckets[4].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+                              @if (aggsJson.aggregations.monthsOfManagementExperience.buckets[5].doc_count > 0)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="monthsOfManagementExperience" type="checkbox" value="[180 TO *]" class="form-input-styled" @(NullToString(monthsOfManagementExperience).Contains("[180 TO *]") ? " checked " : "") data-fouc=""></span>
+                                    @uiTerms["lblOver15Years"]
+                                    <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.monthsOfManagementExperience.buckets[5].doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+
+                              <div id="monthsOfManagementExperience_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+
+                              @if (monthsOfManagementExperienceTotalBucketCount == 0)
+                              {
+                                <script>
+                                  $(".monthsOfManagementExperience-filter").hide();
+                                </script>
+                              }
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3">@Utils.GreekUpper(uiTerms["lblEmploymentStatus"])</legend>
+                            <div class="form-group mb-1" onmouseover="$('#isEmployed_submit').css('visibility','visible')" onmouseout="$('#isEmployed_submit').css('visibility','hidden')">
+                              @foreach (var bucket in aggsJson.aggregations.isEmployed.buckets)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="isEmployed" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(isEmployed).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                    @(bucket.key == 1 ? uiTerms["lblIsEmployed"] : uiTerms["lblIsNotEmployed"] )
+                                    <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+                              <div id="isEmployed_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3">@Utils.GreekUpper(uiTerms["lblExperienceType"])</legend>
+                            <div class="form-group mb-1" onmouseover="$('#jobExperienceType_submit').css('visibility','visible')" onmouseout="$('#jobExperienceType_submit').css('visibility','hidden')">
+                              @foreach (var bucket in aggsJson.aggregations.jobExperienceType.buckets)
+                              {
+                                if (!String.IsNullOrEmpty(bucket.key))
+                                {
+                                  <div class="form-check">
+                                    <label class="form-check-label">
+                                      <span><input name="jobExperienceType" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(jobExperienceType).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                      @Utils.GetExtTerm(bucket.key, uiTerms)
+                                      <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                    </label>
+                                  </div>
+                                }
+
+                              }
+                              <div id="jobExperienceType_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 currentManagementLevel-filter">@Utils.GreekUpper(uiTerms["lblManagementLevel"])</legend>
+                            <div class="form-group currentManagementLevel-filter mb-1" onmouseover="$('#currentManagementLevel_submit').css('visibility','visible')" onmouseout="$('#currentManagementLevel_submit').css('visibility','hidden')">
+                              @{
+                                var currentManagementLevelBucketCount = 0;
+                              }
+                              @foreach (var bucket in aggsJson.aggregations.currentManagementLevel.buckets)
+                              {
+                                if (!String.IsNullOrEmpty(bucket.key))
+                                {
+                                  <div class="form-check">
+                                    <label class="form-check-label">
+                                      <span><input name="currentManagementLevel" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(currentManagementLevel).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                      @Utils.GetExtTerm(bucket.key, uiTerms)
+                                      <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                    </label>
+                                  </div>
+                                  currentManagementLevelBucketCount++;
+                                }
+
+                              }
+                              <div id="currentManagementLevel_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                              @if (currentManagementLevelBucketCount == 0)
+                              {
+                                <script>
+                                  $(".currentManagementLevel-filter").hide();
+                                </script>
+                              }
+                            </div>
+
+                            <div class="executiveType-filter" onmouseover="$('#executive_submit').css('visibility','visible')" onmouseout="$('#executive_submit').css('visibility','hidden')">
+                              <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 executiveType-filter">@Utils.GreekUpper(uiTerms["lblExecutiveType"])</legend>
+                              <div class="form-group executiveType-filter mb-1" style="max-height:250px;height:100%;overflow-y:auto">
+                                @{
+                                  var executiveBucketCount = 0;
+                                }
+                                @foreach (var bucket in aggsJson.aggregations.executiveType.buckets)
+                                {
+                                  if (!string.IsNullOrEmpty(bucket.key))
+                                  {
+                                    <div class="form-check">
+                                      <label class="form-check-label">
+                                        <span><input name="executiveType" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(executiveType).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                        @Utils.GetExtTerm(bucket.key, uiTerms)
+                                        <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                      </label>
+                                    </div>
+                                    executiveBucketCount++;
+                                  }
+
+                                }
+                              </div>
+                              <div id="executive_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2 executiveType-filter"><i class="icon-search4"></i></button>
+                              </div>
+                              @if (executiveBucketCount == 0)
+                              {
+                                <script>
+                                  $(".executiveType-filter").hide();
+                                </script>
+                              }
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 employers-filter">@Utils.GreekUpper(uiTerms["lblEmployers"])</legend>
+                            <div class="form-group employers-filter mb-1">
+                              <input name="employersTxt" class="form-control" placeholder="@uiTerms["lblEmployerName"]" />
+                            </div>
+                            <div class="employersTxt-filter" style="text-align:right;margin-bottom:20px">
+                              <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                            </div>
+                            <div class="employers-filter" onmouseover="$('#employers_submit').css('visibility','visible')" onmouseout="$('#employers_submit').css('visibility','hidden')">
+                              <div class="form-group employers-filter" style="max-height:480px;overflow-y:auto;">
+                                @{
+                                  var employersBucketCount = 0;
+                                }
+                                @foreach (var bucket in aggsJson.aggregations.employers.buckets)
+                                {
+                                  if (!string.IsNullOrEmpty(bucket.key))
+                                  {
+                                    if (bucket.doc_count >= 2)
+                                    {
+                                      <div class="form-check">
+                                        <label class="form-check-label">
+                                          <span><input name="employers" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(executiveType).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                          @bucket.key
+                                          <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                        </label>
+                                      </div>
+                                      employersBucketCount++;
+                                    }
+
+                                  }
+
+                                }
+                              </div>
+
+                              <div id="employers_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2 employers-filter"><i class="icon-search4"></i></button>
+                              </div>
+
+                              @if (employersBucketCount == 0)
+                              {
+                                <script>
+                                  $(".employers-filter").hide();
+                                </script>
+                              }
+
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 positionTitles-filter">@Utils.GreekUpper(uiTerms["lblPositionTitles"])</legend>
+                            <div class="form-group positionTitles-filter mb-1">
+                              <input name="positionTitlesTxt" class="form-control" placeholder="@uiTerms["lblPositionTitle"]" />
+                            </div>
+                            <div class="positionTitles-filter" style="text-align:right;margin-bottom:20px">
+                              <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                            </div>
+
+                            <div class="form-group positionTitles-filter" style="max-height:480px;overflow-y:auto">
+                              @{
+                                var positionTitlesBucketCount = 0;
+                              }
+                              @foreach (var bucket in aggsJson.aggregations.positionTitles.buckets)
+                              {
+                                if (!String.IsNullOrEmpty(bucket.key))
+                                {
+                                  if (bucket.doc_count >= 3)
+                                  {
+                                    <div class="form-check">
+                                      <label class="form-check-label">
+                                        <span><input name="positionTitles" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(executiveType).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                        @bucket.key
+                                        <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                      </label>
+                                    </div>
+                                    positionTitlesBucketCount++;
+                                  }
+
+                                }
+
+                              }
+
+                            </div>
+
+                            <div style="text-align:right;visibility:hidden">
+                              <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                            </div>
+
+                            @if (positionTitlesBucketCount == 0)
+                            {
+                              <script>
+                                $(".positionTitles-filter").hide();
+                              </script>
+                            }
+
+
+
+
+
+                          </fieldset>
+
+
+
+                    </div>
+                    </div>
+                    <!-- /filter -->
+                    <!-- Filter -->
+                    <div class="card areas-filter">
+                        <div class="card-header bg-transparent header-elements-inline pt-0 pb-1">
+                            <span class="font-size-lg font-weight-semibold">@Utils.GreekUpper(uiTerms["lblArea"])</span>
+                            <div class="header-elements">
+
+                            </div>
+                        </div>
+                        <div class="card-body pb-0 administrativeArea-filter" onmouseover="$('#administrativeArea_submit').css('visibility','visible')" onmouseout="$('#administrativeArea_submit').css('visibility','hidden')">
+                          <fieldset>
+                            <div class="form-group administrativeArea-frontend-filter mb-2">
+                              <input name="administrativeAreaFrontendFilter" class="form-control" data-target-filter="administrativeAreaFilterGroup" placeholder="@uiTerms["lblArea"]" />
+                            </div>
+                            <div id="administrativeAreaFilterGroup" class="form-group administrativeArea-filter" style="max-height:250px;overflow-y:auto;">
+                              @{
+                                var administrativeAreaBucketCount = 0;
+                              }
+                              @foreach (var bucket in aggsJson.aggregations.administrativeArea.buckets)
+                              {
+                                if (!String.IsNullOrEmpty(bucket.key))
+                                {
+                                  <div class="form-check">
+                                    <label class="form-check-label">
+                                      <span><input name="administrativeArea" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(administrativeArea).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                      @bucket.key
+                                      <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                    </label>
+                                  </div>
+                                  administrativeAreaBucketCount++;
+                                }
+                              }
+
+
+                            </div>
+
+                            <div id="administrativeArea_submit" class="" style="text-align:right;visibility:hidden">
+                              <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                            </div>
+
+                            @if (administrativeAreaBucketCount == 0)
+                            {
+                              <script>
+                                $(".areas-filter").hide();
+                              </script>
+                            }
+
+
+
+
+                          </fieldset>
+
+
+
+                        </div>
+                    </div>
+                    <!-- /filter -->
+                    <!-- Filter -->
+                    <div class="card" id="education">
+                        <div class="card-header bg-transparent header-elements-inline pt-0 pb-1">
+                            <span class="font-size-lg font-weight-semibold">@uiTerms["lblEducation"]</span>
+                            <div class="header-elements">
+
+                            </div>
+                        </div>
+                        <div class="card-body pb-0">
+                            <fieldset>
+                                <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 schoolType-filter">@Utils.GreekUpper(uiTerms["lblSchoolType"])</legend>
+                                <div class="form-group schoolType-filter mb-1" onmouseover="$('#schoolType_submit').css('visibility','visible')" onmouseout="$('#schoolType_submit').css('visibility','hidden')" >
+                                    @{
+                                        var schoolTypeBucketCount = 0;
+                                    }
+                                    @foreach (var bucket in aggsJson.aggregations.schoolTypes.buckets)
+                                    {
+                                        if (!String.IsNullOrEmpty(bucket.key))
+                                        {
+                                            <div class="form-check">
+                                                <label class="form-check-label">
+                                                    <span><input name="schoolTypes" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(schoolTypes).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                                    @Utils.GetExtTerm(bucket.key, uiTerms)
+                                                    <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                                </label>
+                                            </div>
+                                            schoolTypeBucketCount++;
+                                        }
+                                    }
+                                    <div id="schoolType_submit" style="text-align:right;visibility:hidden">
+                                        <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                                    </div>
+                                </div>
+
+                                @if (schoolTypeBucketCount == 0)
+                                {
+                                    <script>
+                                        $(".schoolType-filter").hide();
+                                    </script>
+                                }
+
+
+                                <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 degreeType-filter">@Utils.GreekUpper(uiTerms["lblDegreeType"])</legend>
+                                <div class="form-group degreeType-filter mb-1" onmouseover="$('#degreeType_submit').css('visibility','visible')" onmouseout="$('#degreeType_submit').css('visibility','hidden')">
+                                    @{
+                                        var degreeTypeBucketCount = 0;
+                                    }
+                                    @foreach (var bucket in aggsJson.aggregations.degreeTypes.buckets)
+                                    {
+                                        if (!String.IsNullOrEmpty(bucket.key))
+                                        {
+                                            <div class="form-check">
+                                                <label class="form-check-label">
+                                                    <span><input name="degreeTypes" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(degreeTypes).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                                    @Utils.GetExtTerm(bucket.key, uiTerms)
+                                                    <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                                </label>
+                                            </div>
+                                            degreeTypeBucketCount++;
+                                        }
+                                    }
+                                    <div id="degreeType_submit" style="text-align:right;visibility:hidden">
+                                        <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                                    </div>
+                                </div>
+
+                                @if (degreeTypeBucketCount == 0)
+                                {
+                                    <script>
+                                        $(".degreeType-filter").hide();
+                                    </script>
+                                }
+
+
+                                <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 languages-filter">@Utils.GreekUpper(uiTerms["lblLanguages"])</legend>
+                                <div class="form-group languages-filter mb-1" onmouseover="$('#languages_submit').css('visibility','visible')" onmouseout="$('#languages_submit').css('visibility','hidden')">
+                                    @{
+                                        var languagesBucketCount = 0;
+                                    }
+                                    @foreach (var bucket in aggsJson.aggregations.languages.buckets)
+                                    {
+                                        if (!String.IsNullOrEmpty(bucket.key))
+                                        {
+                                            <div class="form-check">
+                                                <label class="form-check-label">
+                                                    <span><input name="languages" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(languages).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                                    @Utils.GetExtTerm(bucket.key, uiTerms)
+                                                    <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                                </label>
+                                            </div>
+                                            languagesBucketCount++;
+                                        }
+                                    }
+
+                                    <div id="languages_submit" style="text-align:right;visibility:hidden">
+                                        <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                                    </div>
+                                </div>
+                                @if (languagesBucketCount == 0)
+                                {
+                                    <script>
+                                        $(".languages-filter").hide();
+                                    </script>
+                                }
+
+
+                                
+                            </fieldset>
+                          </div>
+                        </div>
+                    <!-- /filter -->
+                    <!-- Filter -->
+                    <div class="card tags-filter">
+                        <div class="card-header bg-transparent header-elements-inline pt-0 pb-1">
+                            <span class="font-size-lg font-weight-semibold">@Utils.GreekUpper(uiTerms["lblTags"])</span>
+                            <div class="header-elements">
+
+                            </div>
+                        </div>
+                        <div class="card-body pb-0" onmouseover="$('#tags_submit').css('visibility','visible')" onmouseout="$('#tags_submit').css('visibility','hidden')">
+                          <fieldset>
+                            <div class="form-group tags-frontend-filter mb-2">
+                              <input name="tagsFrontendFilter" class="form-control" data-target-filter="tagsFilterGroup" placeholder="tag" />
+                            </div>
+                            <div id="tagsFilterGroup" class="form-group" style="max-height:250px;height:100%;overflow-y:auto">
+                              @{
+                                var tagsBucketCount = 0;
+                              }
+                              @foreach (var bucket in aggsJson.aggregations.tags.buckets)
+                              {
+                                if (!String.IsNullOrEmpty(bucket.key))
+                                {
+                                  <div class="form-check">
+                                    <label class="form-check-label">
+                                      <span><input name="tags" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(tags).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                      @bucket.key
+                                      <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                    </label>
+                                  </div>
+                                  tagsBucketCount++;
+                                }
+                              }
+
+                            </div>
+                            <div id="tags_submit" style="text-align:right;visibility:hidden">
+                              <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                            </div>
+                            @if (tagsBucketCount == 0)
+                            {
+                              <script>
+                                $(".tags-filter").hide();
+                              </script>
+                            }
+
+
+                          </fieldset>
+
+
+
+                        </div>
+                    </div>
+                    <!-- /filter -->
+                    <!-- Filter -->
+                    <div class="card">
+                        <div class="card-header bg-transparent header-elements-inline pt-0 pb-1">
+                            <span class="font-size-lg font-weight-semibold">@Utils.GreekUpper(uiTerms["lblHistory"])</span>
+                            <div class="header-elements">
+
+                            </div>
+                        </div>
+                        <div class="card-body">
+                          <fieldset>
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 matchScore-filter">@Utils.GreekUpper(uiTerms["lblMatchScore"])</legend>
+                            <div class="form-group mb-1 matchScore-filter" onmouseover="$('#matchScore_submit').css('visibility','visible')" onmouseout="$('#matchScore_submit').css('visibility','hidden')">
+                              <div class="form-check">
+                                <label class="form-check-label">
+                                  <span><input name="averageMatchScore" type="checkbox" value="[0 TO 25]" class="form-input-styled" @(NullToString(averageMatchScore).Contains("[0 TO 25]") ? " checked " : "") data-fouc=""></span>
+                                  0% - 25%
+                                  <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.averageMatchScore.buckets[0].doc_count)</span>
+                                </label>
+                              </div>
+                              <div class="form-check">
+                                <label class="form-check-label">
+                                  <span><input name="averageMatchScore" type="checkbox" value="[26 TO 50]" class="form-input-styled" @(NullToString(averageMatchScore).Contains("[26 TO 50]") ? " checked " : "") data-fouc=""></span>
+                                  26% - 50%
+                                  <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.averageMatchScore.buckets[1].doc_count)</span>
+                                </label>
+                              </div>
+                              <div class="form-check">
+                                <label class="form-check-label">
+                                  <span><input name="averageMatchScore" type="checkbox" value="[51 TO 75]" class="form-input-styled" @(NullToString(averageMatchScore).Contains("[51 TO 75]") ? " checked " : "") data-fouc=""></span>
+                                  51% - 75%
+                                  <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.averageMatchScore.buckets[2].doc_count)</span>
+                                </label>
+                              </div>
+                              <div class="form-check">
+                                <label class="form-check-label">
+                                  <span><input name="averageMatchScore" type="checkbox" value="[76 TO 100]" class="form-input-styled" @(NullToString(averageMatchScore).Contains("[76 TO 10]") ? " checked " : "") data-fouc=""></span>
+                                  76% - 100%
+                                  <span class="text-muted font-size-sm ml-1">(@aggsJson.aggregations.averageMatchScore.buckets[3].doc_count)</span>
+                                </label>
+                              </div>
+                              <div id="matchScore_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 answerTags-filter">@Utils.GreekUpper(uiTerms["lblAnswers"])</legend>
+                            <div class="form-group mb-1 answerTags-filter" onmouseover="$('#answerTags_submit').css('visibility','visible')" onmouseout="$('#answerTags_submit').css('visibility','hidden')">
+                              @{
+                                var answerTagsBucketCount = 0;
+                              }
+                              @foreach (var bucket in aggsJson.aggregations.answerTags.buckets)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="answerTags" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(answerTags).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                    @bucket.key
+                                    <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                  </label>
+                                </div>
+                                answerTagsBucketCount++;
+                              }
+                              <div id="answerTags_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                            </div>
+
+                            @if (answerTagsBucketCount == 0)
+                            {
+                              <script>
+                                $(".answerTags-filter").hide();
+                              </script>
+                            }
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 jobTitles-filter">@Utils.GreekUpper(uiTerms["jobs"])</legend>
+                            <div class="form-group mb-1 jobTitles-filter" onmouseover="$('#jobTitles_submit').css('visibility','visible')" onmouseout="$('#jobTitles_submit').css('visibility','hidden')">
+                              @foreach (var bucket in aggsJson.aggregations.jobTitles.buckets)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="jobTitles" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(jobTitles).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                    @bucket.key
+                                    <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+                              <div id="jobTitles_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 organization-filter">@Utils.GreekUpper(uiTerms["lblOrganization"])</legend>
+                            <div class="form-group mb-1 organization-filter" onmouseover="$('#organization_submit').css('visibility','visible')" onmouseout="$('#organization_submit').css('visibility','hidden')">
+                              @foreach (var bucket in aggsJson.aggregations.organizationNames.buckets)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="organizationNames" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(organizationNames).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                    @bucket.key
+                                    <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+                              <div id="organization_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 departmentNames-filter">@Utils.GreekUpper(uiTerms["lblDepartment"])</legend>
+                            <div class="form-group mb-1 departmentNames-filter" onmouseover="$('#departmentNames_submit').css('visibility','visible')" onmouseout="$('#departmentNames_submit').css('visibility','hidden')">
+                              @foreach (var bucket in aggsJson.aggregations.departmentNames.buckets)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="departmentNames" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(departmentNames).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                    @bucket.key
+                                    <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+                              <div id="departmentNames_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 channel-filter">@Utils.GreekUpper(uiTerms["lblChannel"])</legend>
+                            <div class="form-group mb-1 channel-filter" onmouseover="$('#channel_submit').css('visibility','visible')" onmouseout="$('#channel_submit').css('visibility','hidden')">
+                              @foreach (var bucket in aggsJson.aggregations.internalSourceNames.buckets)
+                              {
+                                <div class="form-check">
+                                  <label class="form-check-label">
+                                    <span><input name="internalSourceNames" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(internalSourceNames).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                    @bucket.key
+                                    <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                  </label>
+                                </div>
+                              }
+                              <div id="channel_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                            </div>
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 externalSources-filter">@uiTerms["lblSource"]</legend>
+                            <div class="form-group externalSources-filter mb-1" onmouseover="$('#externalSources_submit').css('visibility','visible')" onmouseout="$('#externalSources_submit').css('visibility','hidden')">
+                              @{
+                                var externalSourcesBucketCount = 0;
+                              }
+                              @foreach (var bucket in aggsJson.aggregations.externalSources.buckets)
+                              {
+                                if (!String.IsNullOrEmpty(bucket.key))
+                                {
+                                  <div class="form-check">
+                                    <label class="form-check-label">
+                                      <span><input name="externalSources" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(externalSources).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                      @bucket.key
+                                      <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                    </label>
+                                  </div>
+                                  externalSourcesBucketCount++;
+                                }
+                              }
+                              <div id="externalSources_submit" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                            </div>
+                            @if (externalSourcesBucketCount == 0)
+                            {
+                              <script>
+                                $(".externalSources-filter").hide();
+                              </script>
+                            }
+
+                            <legend class="font-weight-semibold text-uppercase font-size-sm pt-0 pb-1 mb-3 pipelineStageNames-filter">@Utils.GreekUpper(uiTerms["lblPipelineStage"])</legend>
+                            <div class="form-group pipelineStageNames-filter mb-1" onmouseover="$('#pipelineStageNames_submit').css('visibility','visible')" onmouseout="$('#pipelineStageNames_submit').css('visibility','hidden')">
+                              @{
+                                var pipelineStageNamesBucketCount = 0;
+                              }
+                              @foreach (var bucket in aggsJson.aggregations.pipelineStageNames.buckets)
+                              {
+                                if (!String.IsNullOrEmpty(bucket.key))
+                                {
+                                  <div class="form-check">
+                                    <label class="form-check-label">
+                                      <span><input name="pipelineStageNames" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(pipelineStageNames).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                      @bucket.key
+                                      <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                    </label>
+                                  </div>
+                                  pipelineStageNamesBucketCount++;
+                                }
+                              }
+                              <div id="pipelineStageNames_submit" class="pipelineStageNames-filter" style="text-align:right;visibility:hidden">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                              @if (pipelineStageNamesBucketCount == 0)
+                              {
+                                <script>
+                                  $(".pipelineStageNames-filter").hide();
+                                </script>
+                              }
+                            </div>
+
+
+
+
+                            @if (projectsEnabled)
+                            {
+                              <!--#region projectNames-->
+                              <legend class="font-weight-semibold text-uppercase font-size-sm projectName-filter">@uiTerms["lblProject"]</legend>
+                              <div class="form-group projectName-filter">
+                                @{
+                                  var projectNamesBucketCount = 0;
+                                }
+                                @foreach (var bucket in aggsJson.aggregations.projectNames.buckets)
+                                {
+                                  if (!string.IsNullOrEmpty(bucket.key))
+                                  {
+                                    <div class="form-check">
+                                      <label class="form-check-label">
+                                        <span><input name="projectNames" type="checkbox" value="@bucket.key" class="form-input-styled" @(NullToString(projectNames).Contains(bucket.key.ToString()) ? " checked " : "") data-fouc=""></span>
+                                        @bucket.key
+                                        <span class="text-muted font-size-sm ml-1">(@bucket.doc_count)</span>
+                                      </label>
+                                    </div>
+                                    projectNamesBucketCount++;
+                                  }
+                                }
+                              </div>
+                              <div class="projectName-filter" style="text-align:right">
+                                <button type="submit" class="btn btn-outline bg-primary border-primary text-primary-800 btn-icon border-2 ml-2"><i class="icon-search4"></i></button>
+                              </div>
+                              if (projectNamesBucketCount == 0)
+                              {
+                                <script>
+                                  $(".projectName-filter").hide();
+                                </script>
+                              }
+                              <!--#endregion projectName-->
+                            }
+
+                          </fieldset>
+
+
+
+                        </div>
+                    </div>
+                    <!-- /filter -->
+
+                </div>
+
+                <!-- Sidebar mobile toggler -->
+                <div class="sidebar-mobile-toggler text-center">
+                    <a href="#" class="sidebar-mobile-main-toggle">
+                        <i class="icon-arrow-left8"></i>
+                    </a>
+                    Main sidebar
+                    <a href="#" class="sidebar-mobile-expand">
+                        <i class="icon-screen-full"></i>
+                        <i class="icon-screen-normal"></i>
+                    </a>
+                </div>
+                <!-- /sidebar mobile toggler -->
+                <span class="font-weight-semibold text-gr"></span>
+
+            </div>
+            <!-- /main sidebar -->
+
+            //we have to add an id 
+    <div id="testcandidatesmargin" class="col-md-9" style="margin-left:280px">
+      <!-- Content area -->
+      <!-- Search field -->
+      <div class="card">
+        <div class="card-body">
+          @*<form action="~/candidates">*@
+          <div class="d-sm-flex">
+            <div class="form-group-feedback form-group-feedback-left flex-grow-1 mb-3 mb-sm-0">
+              <input id="freesearch" name="query" type="text" class="form-control form-control-lg" value='@Html.Raw(HttpUtility.HtmlEncode(queryText))' placeholder="@uiTerms["lblSearchCandidates"]">
+              <div class="form-control-feedback form-control-feedback-lg">
+                <i class="icon-search4 text-muted"></i>
+              </div>
+            </div>
+            <div class="ml-sm-3">
+              <button type="button" onclick="FreeSearch();" class="btn bg-teal-400 ml-1 font-weight-semibold btn-lg w-100 w-sm-auto">@uiTerms["lblSearch"]</button>
+            </div>
+          </div>
+          <div class="font-size-sm mt-1 mb-0 pb-0">
+            <a target="_blank" href="https://help.smartcv.co/manage-candidates/search-all-candidates">@uiTerms["lblSearchTips"]</a>
+          </div>
+          @*</form>*@
+        </div>
+      </div>
+      <!-- /search field -->
+
+      <div class="" id="filters" style="background:none;border:0px;padding:0px;border-left:0px;border-right:0px;border-bottom-color:none;border-bottom:0px; margin-bottom:10px">
+        <div class="card-body p-0" style="background:none;padding-left:10px;padding-bottom:10px">
+          <div id="filter_badges" style="line-height:230%">
+            @{
+              var paramsCount = 0;
+              foreach (string key in Request.QueryString.Keys)
+              {
+                if ((!String.IsNullOrEmpty(key)) && (!(key == "page" || key == "sort")))
+                {
+                  foreach (var keyValue in key.Split(','))
+                  {
+                    if (!String.IsNullOrEmpty(keyValue))
+                    {
+                      paramsCount++;
+                    }
+                  }
+                }
+
+
+              }
+
+            }
+
+
+
+            @foreach (string key in Request.QueryString.Keys)
+            {
+              if (key == "jobTitles")
+              {
+                foreach (var jobTitle in jobTitles.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,jobTitle)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["jobs"]): @jobTitle</span></a>
+                }
+              }
+
+              if (key == "organizationNames")
+              {
+                foreach (var organizationName in organizationNames.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,organizationName)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblOrganization"]): @organizationName</span></a>
+                }
+              }
+
+              if (key == "departmentNames")
+              {
+                foreach (var departmentName in departmentNames.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,departmentName)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblDepartment"]): @departmentName</span></a>
+                }
+              }
+
+              if (key == "internalSourceNames")
+              {
+                foreach (var internalSourceName in internalSourceNames.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,internalSourceName)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblChannel"]): @internalSourceName</span></a>
+                }
+              }
+
+              if (key == "externalSources")
+              {
+                foreach (var externalSource in externalSources.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,externalSource)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblSource"]): @externalSource</span></a>
+                }
+              }
+
+              if (key == "pipelineStageNames")
+              {
+                foreach (var pipelineStageName in pipelineStageNames.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,pipelineStageName)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblPipelineStage"]): @pipelineStageName</span></a>
+                }
+              }
+
+
+              if (projectsEnabled && key == "projectNames")
+              {
+                foreach (var projectNameKey in projectNames.Split(','))
+                {
+                  <a href="/filtered-applications/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,projectNameKey)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblProject"]): @projectNameKey</span></a>
+                }
+              }
+
+              if (key == "administrativeArea")
+              {
+                foreach (var administrativeAreaKey in administrativeArea.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,administrativeAreaKey)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @uiTerms["lblArea"]: @administrativeAreaKey</span></a>
+                }
+              }
+
+              if (key == "employers" & !String.IsNullOrEmpty(employers))
+              {
+                foreach (var employer in employers.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,employer)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @uiTerms["lblEmployers"]: @employer</span></a>
+                }
+              }
+
+              if (key == "employersTxt" & !string.IsNullOrEmpty(employersTxt))
+              {
+                foreach (var employer in employersTxt.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,employer)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @uiTerms["lblEmployers"]: @employer</span></a>
+                }
+              }
+
+
+              if (key == "positionTitlesTxt" & !string.IsNullOrEmpty(positionTitlesTxt))
+              {
+                foreach (var positionTitle in positionTitlesTxt.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,positionTitle)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @uiTerms["lblPositionTitles"]: @positionTitle</span></a>
+                }
+              }
+
+              if (key == "isEmployed")
+              {
+                foreach (var isEmployedKey in isEmployed.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,isEmployedKey)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblEmploymentStatus"]): @(isEmployedKey == "1" ? uiTerms["lblIsEmployed"] : uiTerms["lblIsNotEmployed"] ) </span></a>
+                }
+              }
+
+              if (key == "tags")
+              {
+                foreach (var tag in tags.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,tag)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblTags"]): @tag</span></a>
+                }
+              }
+
+              if (key == "answerTags")
+              {
+                foreach (var answerTag in answerTags.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,answerTag)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblAnswers"]): @answerTag</span></a>
+                }
+              }
+
+              if (key == "jobExperienceType")
+              {
+                foreach (var jobExperienceTypeKey in jobExperienceType.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,jobExperienceTypeKey)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblExperienceType"]): @Utils.GetExtTerm(jobExperienceTypeKey, uiTerms)</span></a>
+                }
+              }
+
+              if (key == "currentManagementLevel")
+              {
+                foreach (var currentManagementLevelKey in currentManagementLevel.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,currentManagementLevelKey)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblManagementLevel"]): @Utils.GetExtTerm(currentManagementLevelKey, uiTerms)</span></a>
+                }
+              }
+
+              if (key == "executiveType")
+              {
+                foreach (var executiveTypeKey in executiveType.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,executiveTypeKey)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblExecutiveType"]): @Utils.GetExtTerm(executiveTypeKey, uiTerms)</span></a>
+                }
+              }
+
+              if (key == "schoolTypes")
+              {
+                foreach (var schoolType in schoolTypes.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,schoolType)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblSchoolType"]): @Utils.GetExtTerm(schoolType, uiTerms)</span></a>
+                }
+              }
+
+              if (key == "degreeTypes")
+              {
+                foreach (var degreeType in degreeTypes.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,degreeType)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblDegreeType"]): @Utils.GetExtTerm(degreeType, uiTerms)</span></a>
+                }
+              }
+
+              if (key == "languages")
+              {
+                foreach (var language in languages.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,language)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblLanguages"]): @Utils.GetExtTerm(language, uiTerms)</span></a>
+                }
+              }
+
+              if (key == "monthsOfWorkExperience")
+              {
+                foreach (var monthsOfWorkExperienceKey in monthsOfWorkExperience.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,monthsOfWorkExperienceKey)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblWorkExperienceDuration"]): @Utils.GetExtTerm(filterTerms[monthsOfWorkExperienceKey], uiTerms)</span></a>
+                }
+              }
+
+              if (key == "monthsOfManagementExperience")
+              {
+                foreach (var monthsOfManagementExperienceKey in monthsOfManagementExperience.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,monthsOfManagementExperienceKey)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblMgmtExperienceDuration"]): @Utils.GetExtTerm(filterTerms[monthsOfManagementExperienceKey], uiTerms)</span></a>
+                }
+              }
+
+              if (key == "averageMatchScore")
+              {
+                foreach (var averageMatchScoreKey in averageMatchScore.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,averageMatchScoreKey)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblMatchScore"]): @Utils.GetExtTerm(filterTerms[averageMatchScoreKey], uiTerms) </span></a>
+                }
+              }
+
+
+              if (key == "skills" & !string.IsNullOrEmpty(skills))
+              {
+                foreach (var skill in skills.Split(','))
+                {
+                  <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),key,skill)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblSkills"]): @skill</span></a>
+                }
+              }
+
+              if (key == "q" & !String.IsNullOrEmpty(queryText))
+              {
+
+                <a href="/candidates/@removeFromQueryString(Server.UrlDecode(Request.Url.Query.ToString()),"q",queryText)"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @Utils.GreekUpper(uiTerms["lblSearchTerms"]): @Html.Raw((queryText))</span></a>
+
+              }
+
+
+            }
+
+            @if (paramsCount > 1)
+            {
+              <a href="/candidates"><span class="font-size-lg badge badge-primary bg-cerulean"><i class="icon-cancel-square"></i> @uiTerms["lblResetAll"]</span></a>
+            }
+
+          </div>
+        </div>
+      </div>
+
+      <script>
+        if ($("#filter_badges").children().length == 0) {
+          $("#filters").hide();
+        }
+      </script>
+      <div class="card mb-2">
+        <div class="card-body" style="padding:0px;">
+          <div class="row">
+            <div class="col-md-3 font-size-lg" style="padding:12px 20px;">
+              <strong>@(offset + 1)-@(offset + pageSize > json.hits.total.value ? json.hits.total.value : offset + pageSize )</strong> @uiTerms["lblFrom"] <strong>@(jsonAll != null ? jsonAll.count : json.hits.total.value)</strong>
+            </div>
+            <div class="col-md-6 pt-2">
+              <ul class="pagination pagination-sm pagination-pager  ">
+
+                @if (page > 1)
+                {
+                  <li class="page-item"><a href="~/candidates?@setQueryStringKeyValue(Server.UrlDecode(Request.Url.Query.ToString()),"page",(page-1).ToString())" class="page-link">&larr; &nbsp; @uiTerms["lblPreviousPage"]</a></li>
+                }
+
+                @if (page < totalPages)
+                {
+                  <li class="page-item"><a href="~/candidates?@setQueryStringKeyValue(Server.UrlDecode(Request.Url.Query.ToString()),"page",(page+1).ToString())" class="page-link">@uiTerms["lblNextPage"] &nbsp; &rarr;</a></li>
+                }
+
+              </ul>
+            </div>
+
+            <div class="col-md-3">
+              <a href="#" class="navbar-nav-link dropdown-toggle font-size-lg font-weight-bold" data-toggle="dropdown">@sortOptions[sortOrder]</a>
+              <div class="dropdown-menu dropdown-menu-left">
+                <div class="dropdown-header font-weight-semibold py-0 text-default text-uppercase font-size-xs line-height-xs mt-1">@uiTerms["lblSortBy"]</div>
+                <div class="dropdown-divider opacity-75"></div>
+                @foreach (var sortOption in sortOptions)
+                {
+                  <a href="~/candidates?@setQueryStringKeyValue(Server.UrlDecode(Request.Url.Query.ToString()),"sort",sortOption.Key)" class="dropdown-item">@sortOption.Value</a>
+                }
+
+              </div>
+            </div>
+
+          </div>
+
+
+
+        </div>
+      </div>
+
+      <div class="">
+
+
+
+
+
+
+
+        @foreach (var result in json.hits.hits)
+        {
+          sortLine = "";
+          if (sortField == "lastAppliedDateTime")
+          {
+            // sortLine = Utils.DisplayDate(result._source.lastAppliedDateTime);
+            sortLine = Utils.LocalDateTime(Convert.ToDateTime(result._source.lastAppliedDateTime), userPrefs.timeZoneId, userPrefs.uiLanguage).asMidDateShortTime24;
+          }
+          else if (sortField == "averageMatchScore")
+          {
+            sortLine = result._source.createdDateTime;
+          }
+          else if (sortField == "monthsOfWorkExperience")
+          {
+            sortLine = Utils.DurationInt(result._source.monthsOfWorkExperience, userPrefs.uiLanguage);
+          }
+          else if (sortField == "averageMonthsPerEmployer")
+          {
+            sortLine = Utils.DurationInt(result._source.averageMonthsPerEmployer, userPrefs.uiLanguage);
+          }
+          else if (sortField == "monthsOfManagementExperience")
+          {
+            sortLine = Utils.DurationInt(result._source.monthsOfManagementExperience, userPrefs.uiLanguage);
+          }
+          else if (sortField == "highestManagementScore")
+          {
+            sortLine = result._source.highestManagementScore.ToString();
+          }
+          else if (sortField == "isEmployed")
+          {
+            sortLine = result._source.isEmployed == 1 ? uiTerms["lblIsEmployed"] : uiTerms["lblIsNotEmployed"];
+          }
+          else if (sortField == "maxDegreeLevel")
+          {
+
+            sortLine = result._source.maxDegreeType;
+          }
+
+          var isExpired = false;
+          if (DateTime.Now > Convert.ToDateTime(result._source.expiryDate) & Convert.ToDateTime(result._source.expiryDate).Year > 1900)
+          {
+            isExpired = true;
+            continue;
+          }
+          <!-- Basic card -->
+          <!-- Basic table -->
+          <div class="card col-lg-12 mb-2">
+
+
+            <!-- Numbers -->
+            <div class="card-body border-0 pb-0">
+
+
+
+              <div class="row text-left">
+                <div class="col-2">
+                  <div class="mr-3  position-relative text-center">
+                    @if (result._source.hasPhoto == 1)
+                    {
+                      <img src="@SmartCV.PhotoCVUrlMedium(Guid.Parse(result._source.parsedCvGuid))" class="rounded-circle img-fluid" width="80" height="80" alt="">
+                    }
+                    else
+                    {
+                      <a href="#" class="btn bg-teal-400 rounded-round btn-icon btn-lg" style="width:80px;height:80px;"><span class="letter-icon p-1" style="font-size:36px;text-align:center;vertical-align:middle;display:block;width:100%;height:100%"> @result._source.initials</span></a>
+                    }
+
+                    @if (result._source.averageMatchScore > 0)
+                    {
+                      <span class="badge bg-blue badge-pill badge-float border-2 border-white font-size-lg">@result._source.averageMatchScore%</span>
+                    }
+
+
+                  </div>
+                </div>
+
+
+                <div class="col-7">
+                  <div class="mb-3">
+                    <h4 class="mb-0" style="">
+                      <strong>
+                        <a href="/candidate?id=@result._id" style="@( isExpired | result._source.isWithdrawn==1 ? "text-decoration:line-through;" : "")">
+                          @if (isExpired)
+                          {
+                            if (result._source.initials != null)
+                            {
+                              var initials = result._source.initials;
+                              if (initials.ToString().Length == 2) { initials = initials.Insert(1, ".").Insert(3, "."); }
+                              @Html.Raw(initials);
+                            }
+                          }
+                          else
+                          {
+                            @Html.Raw(Utils.CandidateDisplayName(result._source.fullName, uiTerms))
+
+                          }
+                        </a>
+                      </strong>
+                      @if (result._source.averageRating > 0)
+                      {
+                        <span id="averageRating_@result._id"></span>
+                        <script>
+                            $("#averageRating_@result._id").starRating({
+                                starSize: 14,
+                                useGradient: false,
+                                activeColor: "#ffa534",
+                                initialRating: @string.Format(new System.Globalization.CultureInfo("en-GB"), "{0:0.##}", (double)result._source.averageRating),
+                                readOnly: true
+                            });
+                        </script>
+                      }
+
+
+                    </h4>
+                    @if (!isExpired)
+                    {
+                      <div class="text-lg font-size-lg">
+                        @if (result._source.isEmployed == 1)
+                        {
+                          <span>@result._source.currentRole <span class="font-weight-semibold">@@ @result._source.currentEmployer</span></span>
+                        }
+                        else
+                        {
+                          <span>@result._source.recentRole</span>
+                        }
+                        &nbsp;
+                      </div>
+
+                      <div class="text-lg font-size-sm">
+                        <span class="font-size-sm badge badge-light">@result._source.internalSourceName</span>
+                        @if (!String.IsNullOrEmpty(result._source.externalSource))
+                        {
+                          <span class="font-size-sm badge badge-light">@result._source.externalSource</span>
+                        }
+                      </div>
+                      <div class="font-size-xs" style="height:10px">
+                        &nbsp;
+                      </div>
+                      <div class="font-size-base">
+                        @result._source.phone ·
+                        @if (SmartCV.CandidateEmail(result._source.email).isValidEmail)
+                        {
+                          <a href="/candidate?id=@result._id&action=email-candidate">@result._source.email</a>
+                        }
+
+
+
+                        ·
+                        @if (result._source.administrativeArea != "")
+                        {
+                          <text>
+                            @result._source.administrativeArea, @result._source.countryCode
+                          </text>
+                        }
+                      </div>
+
+                      if (result._source.tags != null)
+                      {
+                        <div class="font-size-base" style="line-height:230%">
+                          @foreach (var tag in result._source.tags)
+                          {
+                            <a href="~/candidates?tags=@tag"><span class="font-size-sm badge badge-primary bg-deepskyblue">@tag</span></a>
+                          }
+
+                        </div>
+                      }
+                    }
+                    else
+                    {
+                      <div class="font-size-xs" style="height:10px">
+                        &nbsp;
+                      </div>
+                      <div class="font-size-base" style="line-height:230%">&nbsp;</div>
+                    }
+                  </div>
+                </div>
+
+                <div class="col-2 font-weight-semibold" style="text-align:center;padding-top:20px">
+                  @sortLine
+                </div>
+
+              </div>
+            </div>
+            <!-- /numbers -->
+
+
+
+          </div>
+          <!-- /basic table -->
+          <!-- /basic card -->
+        }
+
+
+
+
+        <div class="card">
+          <div class="card-body" style="padding:0px;">
+            <div class="row">
+              <div class="col-md-3 font-size-lg" style="padding:12px 20px;">
+                <strong>@(offset + 1)-@(offset + pageSize > json.hits.total.value ? json.hits.total.value : offset + pageSize )</strong> @uiTerms["lblFrom"] <strong>@json.hits.total.value</strong>
+              </div>
+              <div class="col-md-6 pt-2">
+                <ul class="pagination pagination-sm pagination-pager  ">
+
+                  @if (page > 1)
+                  {
+                    <li class="page-item"><a href="~/candidates?@setQueryStringKeyValue(Server.UrlDecode(Request.Url.Query.ToString()),"page",(page-1).ToString())" class="page-link">&larr; &nbsp; @uiTerms["lblPreviousPage"]</a></li>
+                  }
+
+                  @if (page < totalPages)
+                  {
+                    <li class="page-item"><a href="~/candidates?@setQueryStringKeyValue(Server.UrlDecode(Request.Url.Query.ToString()),"page",(page+1).ToString())" class="page-link">@uiTerms["lblNextPage"] &nbsp; &rarr;</a></li>
+                  }
+
+                </ul>
+              </div>
+
+              <div class="col-md-3">
+                <a href="#" class="navbar-nav-link dropdown-toggle font-size-lg font-weight-bold simple" data-toggle="dropdown">@sortOptions[sortOrder]</a>
+                <div class="dropdown-menu dropdown-menu-left">
+                  @foreach (var sortOption in sortOptions)
+                  {
+                    <a href="~/candidates?@setQueryStringKeyValue(Server.UrlDecode(Request.Url.Query.ToString()),"sort",sortOption.Key)" class="dropdown-item">@sortOption.Value</a>
+                  }
+
+                </div>
+              </div>
+
+            </div>
+
+
+
+          </div>
+        </div>
+
+
+
+      </div>
+
+
+
+
+
+      <!-- /content area -->
+    </div>
+        }
+        else
+        {
+            <div class="alert border-1 border-dashed border-grey col-12" style="border-width:5px;display:table;height:400px">
+                <div id="child" style="display: table-cell;vertical-align: middle;text-align:center">
+
+                    <h2>@uiTerms["msgNoCandidates"]</h2>
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</form>
+
+@functions {
+    public static string qString(string queryString, string keyToRemove, string valueToRemove)
+    {
+        var q = "";
+
+        foreach (var parameter in queryString.Split('&'))
+        {
+            var key = parameter.Split('=')[0];
+            var value = parameter.Split('=')[1];
+            foreach (var keyValue in value.Split(','))
+            {
+                if (key != keyToRemove & keyValue != valueToRemove)
+                {
+                    q += key + "=" + keyValue + "&";
+                }
+            }
+        }
+        return q;
+    }
+
+    public static string removeFromQueryString(string queryString, string keyToRemove, string valueToRemove)
+    {
+        return (queryString + "&").Replace(keyToRemove + "=" + valueToRemove + "&", "");
+    }
+
+    public static string setQueryStringKeyValue(string queryString, string keyToSet, string valueToSet)
+    {
+        var nameValues = HttpUtility.ParseQueryString(queryString);
+        nameValues.Set(keyToSet, valueToSet);
+        return nameValues.ToString();
+    }
+
+
+
+
+
+    public static string NullToString(object Value)
+    {
+
+        return Value == null ? "" : Value.ToString();
+
+    }
+
+
+
+}
+
+
+<script>
+
+    initialTopPos = $('#sidebar').position().top;
+    $('#sidebar').height(window.innerHeight - initialTopPos);
+
+    window.addEventListener("scroll", function (event) {
+        var scroll = this.scrollY;
+        if (scroll > initialTopPos) {
+            $('#sidebar').css("top", "0px");
+            $('#sidebar').height(window.innerHeight);
+        }
+        else {
+            $('#sidebar').css("top", initialTopPos - scroll + "px");
+            $('#sidebar').height(window.innerHeight - $('#sidebar').position().top);
+        }
+    });
+
+    $(document).ready(function () {
+        $("#global_footer").hide();
+
+      // Get the input field
+   
+    });
+
+  function FreeSearch() {
+    var url = new URL(window.location.href);
+    window.location = url.origin + url.pathname + "?q=" + encodeURIComponent($("#freesearch").val());
+    return false;
+  }
+
+  $('#freesearch').keypress(function (event) {
+    var keycode = (event.keyCode ? event.keyCode : event.which);
+    if (keycode == '13') {
+      event.preventDefault();
+      event.stopPropagation();
+      FreeSearch();
+    }
+  });
+</script>
+
+@if (currentLogin.cIsDemo == 1)
+{
+    <script>
+        new PNotify({
+            title: '@uiTerms["msgDemoAccount"]',
+            text: '@uiTerms["msgDemoAccountDetails"]',
+            hide: false
+        });
+    </script>
+}
+
+<script>
+  $(function () {
+    $("[data-target-filter]").on("keyup", function () {
+      var value = $(this).val().toLowerCase();
+      $(document.getElementById($(this).attr("data-target-filter"))).find(">").filter(function () {
+        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+      });
+    });
+  });
+</script>
+
+
+

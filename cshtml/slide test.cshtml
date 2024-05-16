@@ -1,0 +1,156 @@
+
+
+
+
+
+                <div class="card mb-2">
+                    <div class="card-body" style="padding:0px;">
+                        <div class="row">
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+            @*vdi pipelinestages mobile idea*@
+            <div class="container">
+                <div class="row justify-content-center" style="margin-bottom: 10px;">
+                    <div class="col-5">
+                        <!-- Content for the first column -->
+                        <style>
+                            .page-header {
+                                display: flex;
+                                align-items: center; /* Center vertically */
+                                font-size: 25px;
+                            }
+
+                            .icon {
+                                font-size: 25px;
+                                cursor: pointer;
+                            }
+
+                            .caption {
+                                font-size: 0.8125rem;
+                                margin-left: 5px; /* Adjust spacing between icon and caption */
+                            }
+                        </style>
+
+                        <div class="page-header container col-11" onclick="openNav()">
+                            <span class="icon">&#9776;</span>
+                            <span class="caption">Candidates</span>
+                        </div>
+                    </div>
+
+
+                    <div class="col-7">
+                        <!-- Content for the second column -->
+
+                        <div class="" style="display:block;">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <script>
+                function openNav() {
+                    document.getElementById("mySidenav").style.width = "360px";
+                }
+
+                function closeNav() {
+                    document.getElementById("mySidenav").style.width = "0";
+                }
+            </script>
+
+
+            <div id="mySidenav" class="sidenavvdi" style="padding-top: 90px;">
+                <div style="min-height:95px;">
+                    <div id="sidebar_header" class="row tab-content pt-2 p-0 m-0" style="background:#ffffff;z-index:100;width:350px;" data-sticky_column>
+                        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+
+                    </div>
+                </div>
+            </div>
+
+
+
+
+
+
+
+
+
+
+
+            
+
+
+        <div class="card mb-2">
+            <div class="card-body" style="padding:0px;">
+                <div class="row">
+                    <div class="col-5 font-size-lg" style="padding:13px 20px;">
+                        <strong>@(offset + 1)-@(offset + pageSize > json.hits.total.value ? json.hits.total.value : offset + pageSize )</strong> @uiTerms["lblFrom"] <strong>@(jsonAll != null ? jsonAll.count : json.hits.total.value)</strong>
+                    </div>
+
+
+
+                    <div class="col-7 text-right">
+                        <a href="#" class="navbar-nav-link dropdown-toggle font-size-lg font-weight-bold" data-toggle="dropdown">@sortOptions[sortOrder]</a>
+                        <div class="dropdown-menu dropdown-menu-left">
+                            <div class="dropdown-header font-weight-semibold py-0 text-default text-uppercase font-size-xs line-height-xs mt-1">@uiTerms["lblSortBy"]</div>
+                            <div class="dropdown-divider opacity-75"></div>
+                            @foreach (var sortOption in sortOptions)
+                            {
+                                <a href="~/Mobile/candidates?@setQueryStringKeyValue(Server.UrlDecode(Request.Url.Query.ToString()),"sort",sortOption.Key)" class="dropdown-item">@sortOption.Value</a>
+                            }
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row">
+                    <div class="col-12 pl-3 pb-2 pr-3">
+                        <ul class="pagination pagination-sm pagination-pager  ">
+
+                            @if (page > 1)
+                            {
+                                <li class="page-item"><a href="~/Mobile/candidates?@setQueryStringKeyValue(Server.UrlDecode(Request.Url.Query.ToString()),"page",(page-1).ToString())" class="page-link">&larr; &nbsp; @uiTerms["lblPreviousPage"]</a></li>
+                            }
+
+                            @if (page < totalPages)
+                            {
+                                <li class="page-item"><a href="~/Mobile/candidates?@setQueryStringKeyValue(Server.UrlDecode(Request.Url.Query.ToString()),"page",(page+1).ToString())" class="page-link" style="margin-left: 125px;">@uiTerms["lblNextPage"] &nbsp; &rarr;</a></li>
+                            }
+
+                        </ul>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+
+        <div class="">
+
+
+
+
+
+
+
+
+
+
+
+
+            
