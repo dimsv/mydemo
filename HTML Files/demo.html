@@ -9,30 +9,42 @@
             width: 100px;
             height: 100px;
             background-color: red;
-            z-index: 1;
+            margin-left: 20px;
+            z-index: 3;
         }
         .box2 {
             position: relative;
-            width: 100px;
+            width: 80px;
             height: 100px;
             background-color: blue;
-            z-index: 3;
+            z-index: 2;
+            margin-left: 30px;
+
             margin-top: -50px; /* To overlap with .box1 */
         }
         .box3 {
             position: relative;
-            width: 100px;
+            width: 60px;
             height: 100px;
             background-color: green;
-            z-index: 2;
-            margin-top: -50px; /* To overlap with .box2 */
+            margin-left: 80px;
+
+            z-index: 1;
+            margin-top: -60px; /* To overlap with .box2 */
         }
     </style>
     <title>Z-Index Example</title>
 </head>
 <body>
-    <div class="box1"></div>
-    <div class="box2"></div>
-    <div class="box3"></div>
+    <div class="box1">red</div>
+    <div class="box2">blue</div>
+    <div class="box3">green</div>
 </body>
 </html>
+
+
+
+
+
+top: 710px;
+<div class="sidebar-content">
