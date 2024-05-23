@@ -1,0 +1,665 @@
+@{
+    Layout = "~/_Layout.cshtml";
+    Page.Title = "Pricing - Worklife Recruit (ex SmartCV)";
+
+    //Response.Redirect("/");
+}
+
+<!--<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">-->
+@*<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">*@
+<!--<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>-->
+@*<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>*@
+
+
+<!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">-->
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+@*<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">*@
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+<style type="text/css">
+    .table {
+        --bs-table-hover-bg: rgb(169, 216, 246);
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .row {
+        margin-left: 0px;
+    }
+
+    th, td {
+        text-align: left;
+    }
+
+    tbody {
+        border-top: none;
+    }
+
+    thead th {
+        background-color: #f2f2f2;
+        text-align: center;
+    }
+
+    .header {
+        position: sticky;
+        top: 0;
+    }
+
+    .table-section {
+        width: 100%;
+        /*overflow-x: scroll;*/
+        /*overflow-y: hidden;*/
+        padding-bottom: 20px;
+    }
+
+    td {
+        text-align: center;
+    }
+
+    .row th {
+        background-color: #f2f2f2;
+        text-align: left;
+    }
+
+    .table td,
+    .table th {
+        border-top: none;
+    }
+
+    .table > :not(caption) > * > * {
+        border-bottom-width: 0px;
+    }
+
+    .table > :not(caption) > * > * {
+        background-color: none;
+    }
+
+    .table thead th {
+        border-bottom: none;
+    }
+
+    .nohoverRow {
+        --bs-table-hover-bg: white;
+    }
+
+    #price-table thead th {
+        background-color: rgb(13, 129, 255);
+        color: white;
+    }
+</style>
+
+<!-- WELCOME -->
+<section class="pt-8 pt-md-11 pb-10 pb-md-15 bg-primary">
+
+    <!-- Shape -->
+    <div class="shape shape-blur-3 svg-shim text-white">
+        <svg viewBox="0 0 1738 487" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h1420.92s713.43 457.505 0 485.868C707.502 514.231 0 0 0 0z" fill="url(#paint0_linear)" /><defs><linearGradient id="paint0_linear" x1="0" y1="0" x2="1049.98" y2="912.68" gradientUnits="userSpaceOnUse"><stop stop-color="currentColor" stop-opacity=".075" /><stop offset="1" stop-color="currentColor" stop-opacity="0" /></linearGradient></defs></svg>
+    </div>
+
+    <!-- Content -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-10 col-lg-12 text-center">
+                <h1 class="display-2 text-white">
+                    @*Annual plans that scale with you*@
+                    Plans that scale with you
+                </h1>
+
+                <!-- Text -->
+                @*<p class="lead text-white-80 mb-6 mb-md-8">
+                      With smartCV you always have exactly what your business needs, as it grows and develops. All annual pricing plans includes unlimited positions, team members and companies as well as our ATS and video interviewing software.
+                    </p>*@
+            </div>
+        </div> <!-- / .row -->
+    </div> <!-- / .container -->
+</section>
+
+<!-- SHAPE -->
+<div class="position-relative">
+    <div class="shape shape-bottom shape-fluid-x svg-shim text-light">
+        <svg viewBox="0 0 2880 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 48h2880V0h-720C1442.5 52 720 0 720 0H0v48z" fill="currentColor" /></svg>
+    </div>
+</div>
+
+<!-- PRICING -->
+<!-- PRICING -->
+
+<section class="mt-n8 mt-md-n14">
+    <div class="container">
+        <div class="row gx-4">
+
+
+
+
+            @*table*@
+
+            <section class="py-8 py-md-5 bg-white border-bottom">
+                <div class="container" style="padding-left: 0px;">
+                    <div class="row gx-7">
+                        <div class="elementor-widget-container">
+                            <div class="table-responsive" style="display: flex; justify-content: center;">
+                                <table id="price-table" class="table table-hover">
+                                    @*<thead style="position: sticky; top: 0; background-color: red;" class="thead-dark">*@
+                                    <thead id="prHead" style="position: sticky; top: 0;">
+                                        <tr>
+                                            <th class="header" scope="col" style="padding-left: 40px;">Features</th>
+                                            <th class="header" scope="col" style="text-align: center;">Professional</th>
+                                            <th class="header" scope="col" style="text-align: center;">Advanced</th>
+                                            <th class="header" scope="col" style="text-align: center;">Premium</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                        <tr style="pointer-events: none;">
+                                            <th class="row" style="background-color:white; color:blue; border-top: none; padding-left:10%; margin-right: 0px;">
+                                                Subscription details
+                                            </th>
+                                            <th style="background-color: white;"></th>
+                                            <th style="background-color: white;"></th>
+                                            <th style="background-color: white;"></th>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Price</th>
+                                            <td style="font-weight: bold;">1500 €</td>
+                                            <td style="font-weight: bold;">3500 €</td>
+                                            <td style="font-weight: bold;">6500 €</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Duration</th>
+                                            <td>12 months</td>
+                                            <td>12 months</td>
+                                            <td>12 months</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Number of imported CVs</th>
+                                            <td>1000</td>
+                                            <td>3000</td>
+                                            <td>8000</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Extra CVs (per 250)</th>
+                                            <td>350</td>
+                                            <td><i class="fa fa-close" style="color:red; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-close" style="color:red; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Extra CVs (per 500)</th>
+                                            <td><i class="fa fa-close" style="color:red; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td>500</td>
+                                            <td>500</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Number of published jobs at the same time</th>
+                                            <td>10</td>
+                                            <td>30</td>
+                                            <td>Unlimited</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Number of users</th>
+                                            <td>5</td>
+                                            <td>15</td>
+                                            <td>Unlimited</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Multiple companies per account</th>
+                                            <td><i class="fa fa-close" style="color:red; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr class="nohoverRow">
+                                            <td></td>
+                                            <td colspan="4">
+                                                <div class="w-auto m-auto text-center">
+                                                    <a href="https://app.smartcv.co/account/register" target="" class="btn btn-primary lift btn-block bg-teal-400 font-weight-semibold submit-btn" style="width:100%">
+                                                        Start 21-day free trial <i class="fe fe-arrow-right"></i>
+                                                    </a>
+                                                    <p class="text-center mt-3 text-muted">No credit card required</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr style="pointer-events: none;">
+                                            <th class="row" style="background-color:white; color:blue; border-top: none; padding-left:10%; margin-right: 0px;">
+                                                Gather candidates from all sources
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Branded career site</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Bulk resume upload</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Job mailbox</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Import CVs directly from Outlook</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Scanned CV parsing</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Apply without CV</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Referrals management</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr style="pointer-events: none;">
+                                            <th class="row" style="background-color:white; color:blue; border-top: none; padding-left:10%; margin-right: 0px;">
+                                                Screen candidates
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Intelligent Resume Scoring</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Powerful candidate filtering with 20 built-in filters</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">One-way video interviews</th>
+                                            <td><i class="fa fa-close" style="color:red; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Automatic candidate geolocation</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Screening questions</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Custom candidate filters</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Analytics Dashboard</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Blind Hiring mode</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr style="pointer-events: none;">
+                                            <th class="row" style="background-color:white; color:blue; border-top: none; padding-left:10%; margin-right: 0px;">
+                                                Manage candidates
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Multiple hiring pipelines</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Integrated candidate communication</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Candidate detailed history timeline</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Organize candidates in projects</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Bulk candidate actions</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Compare candidates</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Attached candidate documents</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Search and filter all candidates database</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Recommmendations from candidates database</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Email & job templates</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">AI-generated job descriptions</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Reporting & candidate data export</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">All GDPR features</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr style="pointer-events: none;">
+                                            <th class="row" style="background-color:white; color:blue; border-top: none; padding-left:10%; margin-right: 0px;">
+                                                Team collaboration
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Job assignment</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Team tags, comments, evaluations and mentions</th>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Interview Kits</th>
+                                            <td><i class="fa fa-close" style="color:red; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Fully customizable user roles & access</th>
+                                            <td><i class="fa fa-close" style="color:red; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                            <td><i class="fa fa-check" style="color: green; padding-top: 0px; padding-bottom: 0px;"></i></td>
+                                        </tr>
+                                        <tr style="pointer-events: none;">
+                                            <th class="row" style="background-color:white; color:blue; border-top: none; padding-left:10%; margin-right: 0px;">
+                                                Onboarding & Support Services
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Included support incidents</th>
+                                            <td>5</td>
+                                            <td>10</td>
+                                            <td>20</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Extra support incidents (per 5 incidents)</th>
+                                            <td>100</td>
+                                            <td>100</td>
+                                            <td>100</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Onboarding and 3 hours of training</th>
+                                            <td>400</td>
+                                            <td>400</td>
+                                            <td>400</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="row" style="padding-left:15%; margin-right: 0px;">Extra onboarding & training services (per manhour)</th>
+                                            <td>80</td>
+                                            <td>80</td>
+                                            <td>80</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+        </div> <!-- / .row -->
+    </div> <!-- / .container -->
+</section>
+
+<!-- SHAPE -->
+<div class="position-relative">
+    <div class="shape shape-bottom shape-fluid-x svg-shim text-white">
+        <svg viewBox="0 0 2880 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 48h2880V0h-720C1442.5 52 720 0 720 0H0v48z" fill="currentColor" /></svg>
+    </div>
+</div>
+<section class="py-8 py-md-5 bg-white border-bottom">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-10 col-md-8 text-center">
+                <p class="h1 mt-2">
+                    <small>
+                        Need a bigger plan? <a href="/contact">Contact us</a><br>
+                    </small>
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+
+</section>
+@*
+    <!-- FAQ -->
+    <section class="py-8 py-md-11 bg-white border-bottom">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-12 col-md-10 col-md-8 text-center">
+
+            <!-- Badge -->
+            <span class="badge rounded-pill bg-primary-desat-soft mb-3">
+              <span class="h6 text-uppercase">FAQ</span>
+            </span>
+
+            <!-- Heading -->
+            <h2>
+              Frequently asked questions.
+            </h2>
+
+            <!-- Text -->
+            <p class="font-size-lg text-muted mb-7 mb-md-9">
+              Let us help answer the most common questions you might have.
+            </p>
+          </div>
+        </div> <!-- / .row -->
+
+        <div class="row mb-md-7">
+          <div class="col-12 col-md-6">
+            <div class="row">
+              <div class="col col-md-12 ml-n5 ml-md-0">
+                <!-- Heading -->
+                <h3>
+                  Which payment methods do you accept?
+                </h3>
+                <!-- Text -->
+                <p class="text-gray-700 mb-6 mb-md-0">
+                  We accept all major credit and debit cards.
+                </p>
+              </div>
+            </div> <!-- / .row -->
+          </div>
+
+          <div class="col-12 col-md-6">
+            <div class="row">
+              <div class="col col-md-12 ml-n5 ml-md-0">
+                <!-- Heading -->
+                <h3>
+                  Do these pricing plans expire?
+                </h3>
+                <!-- Text -->
+                <p class="text-gray-700 mb-6 mb-md-0">
+                  They do not. You can keep using your plan until it runs out of candidate space or video interviews, whenever that is.
+                </p>
+              </div>
+            </div> <!-- / .row -->
+          </div>
+        </div> <!-- / .row -->
+
+        <div class="row mb-md-7">
+          <div class="col-12 col-md-6">
+            <div class="row">
+              <div class="col col-md-12 ml-n5 ml-md-0">
+                <!-- Heading -->
+                <h3>
+                  What happens when a plan I purchased ends?
+                </h3>
+                <!-- Text -->
+                <p class="text-gray-700 mb-6 mb-md-0">
+                  You can buy a new plan, whether it is the same or a different one. You also have the option to continue using the application for free, except you will not be able to add new candidates or conduct new video interviews.
+                </p>
+              </div>
+            </div> <!-- / .row -->
+          </div>
+
+          <div class="col-12 col-md-6">
+            <div class="row">
+              <div class="col col-md-12 ml-n5 ml-md-0">
+                <!-- Heading -->
+                <h3>
+                  Can I mix and match different plans?
+                </h3>
+                <!-- Text -->
+                <p class="text-gray-700 mb-6 mb-md-0">
+                  Yes you can! For example, if you need to buy space for 1500 candidates you can combine a SMARTCV-1000 with a SMARTCV-500 plan.
+                </p>
+              </div>
+            </div> <!-- / .row -->
+          </div>
+        </div> <!-- / .row -->
+
+        <div class="row mb-md-7">
+          <div class="col-12 col-md-6">
+            <div class="row">
+              <div class="col col-md-12 ml-n5 ml-md-0">
+                <!-- Heading -->
+                <h3>
+                  I am using a different ATS; can I just buy a video interview plan?
+                </h3>
+                <!-- Text -->
+                <p class="text-gray-700 mb-6 mb-md-0">
+                  Absolutely! You can choose to only use video interviews without the ATS and vice versa.
+                </p>
+              </div>
+            </div> <!-- / .row -->
+          </div>
+
+          <div class="col-12 col-md-6">
+            <div class="row">
+              <div class="col col-md-12 ml-n5 ml-md-0">
+                <!-- Heading -->
+                <h3>
+                  When will I be charged for a candidate?
+                </h3>
+                <!-- Text -->
+                <p class="text-gray-700 mb-6 mb-md-0">
+                  You are charged for a candidate every time a new one is added to the platform in any of the three following ways: through a career site application, a resume upload or the job mailbox.
+                </p>
+              </div>
+            </div> <!-- / .row -->
+          </div>
+        </div> <!-- / .row -->
+
+        <div class="row mb-md-7">
+          <div class="col-12 col-md-6">
+            <div class="row">
+              <div class="col col-md-12 ml-n5 ml-md-0">
+                <!-- Heading -->
+                <h3>
+                  When will I be charged for a video interview?
+                </h3>
+                <!-- Text -->
+                <p class="text-gray-700 mb-6 mb-md-0">
+                  You are charged for a video interview if the interviewee answers at least one question.
+                </p>
+              </div>
+            </div> <!-- / .row -->
+          </div>
+
+          <div class="col-12 col-md-6">
+            <div class="row">
+              <div class="col col-md-12 ml-n5 ml-md-0">
+                <!-- Heading -->
+                <h3>
+                  Could I be charged for incomplete video interviews?
+                </h3>
+                <!-- Text -->
+                <p class="text-gray-700 mb-6 mb-md-0">
+                  This is possible. The candidate may answer all the questions but decide not to submit them in the end, which is beyond our control.
+                </p>
+              </div>
+            </div> <!-- / .row -->
+          </div>
+        </div> <!-- / .row -->
+      </div> <!-- / .container -->
+    </section>
+*@
+@PageParts.StartFreeTrial()
