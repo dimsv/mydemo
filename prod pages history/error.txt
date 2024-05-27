@@ -1,0 +1,112 @@
+Event code: 3003
+
+Event message: A validation error has occurred.
+
+Event time: 5/27/2024 7:09:35 AM
+
+Event time (UTC): 5/27/2024 7:09:35 AM
+
+Event ID: 36f9fd299bb9404f949cd52bd0b231bb
+
+Event sequence: 125890
+
+Event occurrence: 6
+
+Event detail code: 0
+
+
+
+Application information:
+
+    Application domain: /LM/W3SVC/527898979/ROOT-1-133609398413213108
+
+    Trust level: Full
+
+    Application Virtual Path: /
+
+    Application Path: C:\home\site\wwwroot\
+
+    Machine name: PD0SDWK000LCZ
+
+
+
+Process information:
+
+    Process ID: 176
+
+    Process name: w3wp.exe
+
+    Account name: IIS APPPOOL\smartcv-app
+
+
+
+Exception information:
+
+    Exception type: HttpRequestValidationException
+
+    Exception message: A potentially dangerous Request.QueryString value was detected from the client (q="...οτζαμπάση <i******@gmail.c...").
+   at System.Web.HttpRequest.ValidateString(String value, String collectionKey, RequestValidationSource requestCollection)
+   at System.Web.HttpRequest.<>c__DisplayClass280_0.<ValidateHttpValueCollection>b__0(String key, String value)
+   at System.Web.HttpValueCollection.EnsureKeyValidated(String key)
+   at System.Web.HttpValueCollection.Get(String name)
+   at System.Web.HttpRequest.get_Item(String key)
+   at System.Web.HttpRequestWrapper.get_Item(String key)
+   at ASP._Page_data_candidate_name_search_cshtml.Execute()
+   at System.Web.WebPages.WebPageBase.ExecutePageHierarchy()
+   at System.Web.WebPages.WebPage.ExecutePageHierarchy(IEnumerable`1 executors)
+   at System.Web.WebPages.WebPage.ExecutePageHierarchy()
+   at System.Web.WebPages.StartPage.RunPage()
+   at System.Web.WebPages.StartPage.ExecutePageHierarchy()
+   at System.Web.WebPages.WebPageBase.ExecutePageHierarchy(WebPageContext pageContext, TextWriter writer, WebPageRenderingBase startPage)
+   at System.Web.WebPages.WebPageHttpHandler.ProcessRequestInternal(HttpContextBase httpContext)
+
+
+
+
+
+Request information:
+
+    Request URL: https://app.smartcv.co:443/data/candidate-name-search?q=Ιωάννα-Κωνσταντίνα Κοτζαμπάση <i******@gmail.com>
+
+    Request path: /data/candidate-name-search
+
+    User host address: 212.205.146.183
+
+    User: c******@cosmote-evalue.gr
+
+    Is authenticated: True
+
+    Authentication Type: Forms
+
+    Thread account name: IIS APPPOOL\smartcv-app
+
+
+
+Thread information:
+
+    Thread ID: 84
+
+    Thread account name: IIS APPPOOL\smartcv-app
+
+    Is impersonating: False
+
+    Stack trace:    at System.Web.HttpRequest.ValidateString(String value, String collectionKey, RequestValidationSource requestCollection)
+   at System.Web.HttpRequest.<>c__DisplayClass280_0.<ValidateHttpValueCollection>b__0(String key, String value)
+   at System.Web.HttpValueCollection.EnsureKeyValidated(String key)
+   at System.Web.HttpValueCollection.Get(String name)
+   at System.Web.HttpRequest.get_Item(String key)
+   at System.Web.HttpRequestWrapper.get_Item(String key)
+   at ASP._Page_data_candidate_name_search_cshtml.Execute()
+   at System.Web.WebPages.WebPageBase.ExecutePageHierarchy()
+   at System.Web.WebPages.WebPage.ExecutePageHierarchy(IEnumerable`1 executors)
+   at System.Web.WebPages.WebPage.ExecutePageHierarchy()
+   at System.Web.WebPages.StartPage.RunPage()
+   at System.Web.WebPages.StartPage.ExecutePageHierarchy()
+   at System.Web.WebPages.WebPageBase.ExecutePageHierarchy(WebPageContext pageContext, TextWriter writer, WebPageRenderingBase startPage)
+   at System.Web.WebPages.WebPageHttpHandler.ProcessRequestInternal(HttpContextBase httpContext)
+
+
+
+
+Custom event details:
+
