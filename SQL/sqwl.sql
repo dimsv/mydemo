@@ -35,6 +35,17 @@ GROUP BY
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 WITH CustomerNames AS (
     SELECT
         oCustomerId,
@@ -54,4 +65,4 @@ FROM
 JOIN
     CustomerNames c ON o.oCustomerId = c.oCustomerId AND c.rn = 1
 GROUP BY 
-    o.oCustomerId, c.oName;ks
+    o.oCustomerId, c.oName;

@@ -1,0 +1,2 @@
+userName="$publicweb__test" 
+userPWD="YyF4KvZDuuuTH4mNvRqSuTYiETdgNegTyjxv8fb53vc2elmaAE8SYX7TvpeK"
