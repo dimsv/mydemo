@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fourlis Careers</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar {
+            background-color: #0056b3;
+        }
+        .navbar a {
+            color: white !important;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .job-listing {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <a class="navbar-brand" href="#"><img src="logo_url" alt="Fourlis Logo" height="40"></a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item"><a class="nav-link" href="#">Ευκαιρίες Καριέρας</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Υποβολή-Ανανέωση βιογραφικού</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Job Alerts</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Είσοδος</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <!-- Filters -->
+        <section class="filter-section">
+            <h4>Φίλτρα:</h4>
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="country">Χώρα</label>
+                    <select id="country" class="form-control">
+                        <option>ΒΟΥΛΓΑΡΙΑ</option>
+                        <option>ΕΛΛΑΔΑ</option>
+                        <option>ΚΥΠΡΟΣ</option>
+                        <option>ΡΟΥΜΑΝΙΑ</option>
+                        <option>ΤΟΥΡΚΙΑ</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="city">Πόλη</label>
+                    <select id="city" class="form-control">
+                        <option>Αθήνα</option>
+                        <!-- Add more cities as needed -->
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="company">Εταιρεία</label>
+                    <select id="company" class="form-control">
+                        <option>FOURLIS Holdings</option>
+                        <option>Holland & Barrett</option>
+                        <option>IKEA</option>
+                        <option>INTERSPORT</option>
+                        <option>Trade Logistics</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="sector">Τομέας Απασχόλησης</label>
+                    <select id="sector" class="form-control">
+                        <option>FINANCE</option>
+                        <option>HUMAN RESOURCES</option>
+                        <option>INFORMATION TECHNOLOGY</option>
+                        <!-- Add more sectors as needed -->
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Job Listings -->
+        <section class="mt-4">
+            <h4>Αγγελίες</h4>
+            <p>Παρακαλούμε επιλέξτε τις Αγγελίες για τις οποίες επιθυμείτε να υποβάλετε το βιογραφικό σας.</p>
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action job-listing">
+                    <h5 class="mb-1">WAREHOUSE FIRST CO-WORKER (ΙΚΕΑ PATRA) [1st WH_PAT_06/24]</h5>
+                    <small>Ελλάδα - PATRA_EN_PAT</small>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action job-listing">
+                    <h5 class="mb-1">Υπάλληλος Αποθήκης (Picker) (Warehouse Picking Services Co-worker) [THESSWH_0624]</h5>
+                    <small>Ελλάδα - ΘΕΣΣΑΛΟΝΙΚΗ (Ανατολικά)</small>
+                </a>
+                <!-- Repeat similar blocks for other job listings -->
+            </div>
+        </section>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

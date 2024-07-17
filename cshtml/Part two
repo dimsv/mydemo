@@ -1,0 +1,380 @@
+
+var pageSize = 150;
+var offset = 0;
+
+
+var fields = @"candidateId,applicationGuid,jobId,jobTitle,jobCode,organizationId,organizationName,departmentId,departmentName,internalSourceId,internalSourceName,
+                 externalSource,createdDateTime,hasParsingIssues,gender,lastName,firstName,fullName,phone,email,linkedInUrl,averageRating,pipelineStageId,pipelineStageName,
+                 countryCode,administrativeArea,geoDistance,matchScore,isEmployed,currentEmployer,currentRole,recentRole,employers,workHistory,monthsOfWorkExperience,
+                 averageMonthsPerEmployer,monthsOfManagementExperience,currentManagementLevel,schoolTypes,educationHistory,maxDegreeType,languages,expiryDate,tags,answerTags,answersFreeText,comments";
+
+if (projectsEnabled)
+{
+    fields +=",projectId,projectName";
+}
+
+var query = "size=1&track_total_hits=true&q=" + mainQuery;
+var resp = Utils.Elastic("applications/_search", query + "&_source=" + fields, Method.GET, "");
+var json = Json.Decode(resp);
+var totalPages = (int)Math.Ceiling((double)json.hits.total.value / pageSize);
+
+
+var wb = new XLWorkbook();
+var ws = wb.Worksheets.Add("Applications");
+
+ws.Range("A1:Z1").Style.Font.SetBold();
+//ws.Range("A1:Z1").Style.Alignment.WrapText = true;
+
+ws.Cell(1, 1).Value = "applicationId";
+ws.Cell(1, 2).Value = "jobId";
+ws.Cell(1, 3).Value = "jobTitle";
+ws.Cell(1, 4).Value = "jobCode";
+ws.Cell(1, 5).Value = "organizationId";
+ws.Cell(1, 6).Value = "organizationName";
+ws.Cell(1, 7).Value = "departmentId";
+ws.Cell(1, 8).Value = "departmentName";
+ws.Cell(1, 9).Value = "internalSourceName";
+ws.Cell(1, 10).Value = "externalSource";
+ws.Cell(1, 11).Value = "createdDateTime";
+ws.Cell(1, 12).Value = "hasParsingIssues";
+ws.Cell(1, 13).Value = "salutation";
+ws.Cell(1, 14).Value = "lastName";
+ws.Cell(1, 15).Value = "firstName";
+ws.Cell(1, 16).Value = "phone";
+ws.Cell(1, 17).Value = "email";
+ws.Cell(1, 18).Value = "linkedInUrl";
+ws.Cell(1, 19).Value = "matchScore";
+ws.Cell(1, 20).Value = "averageRating";
+ws.Cell(1, 21).Value = "pipelineStageId";
+ws.Cell(1, 22).Value = "pipelineStageName";
+ws.Cell(1, 23).Value = "countryCode";
+ws.Cell(1, 24).Value = "administrativeArea";
+ws.Cell(1, 25).Value = "distanceInKm";
+ws.Cell(1, 26).Value = "isEmployed";
+ws.Cell(1, 27).Value = "currentEmployer";
+ws.Cell(1, 28).Value = "currentRole";
+ws.Cell(1, 29).Value = "recentEmployer";
+ws.Cell(1, 30).Value = "recentRole";
+ws.Cell(1, 31).Value = "allEmployers";
+ws.Cell(1, 32).Value = "allRoles";
+ws.Cell(1, 33).Value = "yearsOfWorkExperience";
+ws.Cell(1, 34).Value = "averageYearsPerEmployer";
+ws.Cell(1, 35).Value = "yearsOfManagementExperience";
+ws.Cell(1, 36).Value = "currentManagementLevel";
+ws.Cell(1, 37).Value = "maxDegreeType";
+ws.Cell(1, 38).Value = "schoolNames";
+ws.Cell(1, 39).Value = "languages";
+ws.Cell(1, 40).Value = "tags";
+ws.Cell(1, 41).Value = "applicationLink";
+ws.Cell(1, 42).Value = "expiryDate";
+ws.Cell(1, 43).Value = "answers";
+ws.Cell(1, 44).Value = "answersFreetext";
+ws.Cell(1, 45).Value = "comment";
+if (projectsEnabled)
+{
+    ws.Cell(1, 46).Value = "projectId";
+    ws.Cell(1, 47).Value = "projectName";
+}
+
+
+int counter = 1;
+
+var scrollid = string.Empty;
+var method = Method.GET;
+//_scroll_id
+var endpoint = "applications/_search";
+var qt = string.Empty;
+for (var page = 1; page <= totalPages; page++)
+{
+    offset = (page - 1) * pageSize;
+
+    query = "scroll=1m&size=" + pageSize.ToString() + "&from=" + offset.ToString() + "&q=" + mainQuery;
+    if (page > 1) {
+        qt = $"scroll=2m&scroll_id={scrollid}";
+        endpoint = "_search/scroll";
+        //qt = query + $"&scrollid={scrollid}&sort=createdDateTime:asc&_source=" + fields;
+        method = Method.POST;
+    }
+    else
+    {
+        qt = query + "&sort=createdDateTime:asc&_source=" + fields;
+    }
+    resp = Utils.Elastic(endpoint, qt, method, "");
+    json = Json.Decode(resp);
+    scrollid = json._scroll_id;
+    if (json == null || json.hits == null || json.hits.hits == null){
+
+        //counter++;
+
+
+        //ws.Cell(counter, 1).Value = qt;
+        //ws.Cell(counter, 2).Value = resp;
+        continue;
+    }
+    foreach (var hit in json.hits.hits)
+    {
+        if (DateTime.Now < Convert.ToDateTime(hit._source.expiryDate))
+        {
+            counter++;
+
+
+            ws.Cell(counter, 1).Value = hit._id;
+            ws.Cell(counter, 2).Value = hit._source.jobId;
+            ws.Cell(counter, 3).Value = hit._source.jobTitle;
+            ws.Cell(counter, 4).Value = hit._source.jobCode;
+            ws.Cell(counter, 5).Value = hit._source.organizationId;
+            ws.Cell(counter, 6).Value = hit._source.organizationName;
+            ws.Cell(counter, 7).Value = hit._source.departmentId;
+            ws.Cell(counter, 8).Value = hit._source.departmentName;
+            ws.Cell(counter, 9).Value = hit._source.internalSourceName;
+            ws.Cell(counter, 10).Value = hit._source.externalSource;
+            ws.Cell(counter, 11).Value = hit._source.createdDateTime;
+            ws.Cell(counter, 12).Value = hit._source.hasParsingIssues == 1 ? "yes" : "no";
+
+            if (hit._source.gender == "male")
+            {
+                ws.Cell(counter, 13).Value = "Mr.";
+            }
+            else if (hit._source.gender == "female")
+            {
+                ws.Cell(counter, 13).Value = "Ms.";
+            }
+
+
+
+            ws.Cell(counter, 14).Value = hit._source.lastName;
+            ws.Cell(counter, 15).Value = hit._source.firstName;
+            ws.Cell(counter, 16).Value = hit._source.phone;
+            if (!hit._source.email.Contains("candidates.smartcv.co"))
+            {
+                ws.Cell(counter, 17).Value = hit._source.email;
+            }
+            ws.Cell(counter, 18).Value = hit._source.linkedInUrl;
+            if (!String.IsNullOrEmpty(hit._source.linkedInUrl))
+            {
+                ws.Cell(counter, 18).Hyperlink = new XLHyperlink("https://" + hit._source.linkedInUrl);
+            }
+            ws.Cell(counter, 19).Value = hit._source.matchScore;
+            ws.Cell(counter, 20).Value = hit._source.averageRating;
+            ws.Cell(counter, 20).Style.NumberFormat.Format = "0.0";
+            ws.Cell(counter, 21).Value = hit._source.pipelineStageId;
+            ws.Cell(counter, 22).Value = hit._source.pipelineStageName;
+            ws.Cell(counter, 23).Value = hit._source.countryCode;
+            ws.Cell(counter, 24).Value = hit._source.administrativeArea;
+            ws.Cell(counter, 25).Value = Math.Round((double)hit._source.geoDistance);
+            ws.Cell(counter, 26).Value = hit._source.isEmployed == 1 ? "yes" : "no";
+            ws.Cell(counter, 27).Value = hit._source.currentEmployer;
+            ws.Cell(counter, 28).Value = hit._source.currentRole;
+
+
+            if (!String.IsNullOrEmpty(hit._source.recentRole) & hit._source.employers.Length > 0)
+            {
+                ws.Cell(counter, 29).Value = hit._source.employers[0];
+            }
+
+
+            ws.Cell(counter, 30).Value = hit._source.recentRole;
+
+            if (hit._source.workHistory != null)
+            {
+                foreach (var position in hit._source.workHistory)
+                {
+                    if (!String.IsNullOrEmpty(position.employer))
+                    {
+                        ws.Cell(counter, 31).Value += position.employer + " (" + position.startDate.Split('-')[0] + "-" + (!String.IsNullOrEmpty(position.EndDate) ? position.EndDate.Split('-')[0] : "") + "), ";
+                    }
+                    if (!String.IsNullOrEmpty(position.title))
+                    {
+                        ws.Cell(counter, 32).Value += position.title + " (" + position.startDate.Split('-')[0] + "-" + (!String.IsNullOrEmpty(position.EndDate) ? position.EndDate.Split('-')[0] : "") + "), ";
+                    }
+                }
+            }
+            if (!String.IsNullOrEmpty(ws.Cell(counter, 31).Value.ToString()) & ws.Cell(counter, 31).Value.ToString().Length >= 2)
+            {
+                ws.Cell(counter, 31).Value = ws.Cell(counter, 31).Value.ToString().Substring(0, ws.Cell(counter, 31).Value.ToString().Length - 2);
+            }
+            if (!String.IsNullOrEmpty(ws.Cell(counter, 32).Value.ToString()) & ws.Cell(counter, 32).Value.ToString().Length >= 2)
+            {
+                ws.Cell(counter, 32).Value = ws.Cell(counter, 32).Value.ToString().Substring(0, ws.Cell(counter, 32).Value.ToString().Length - 2);
+            }
+
+
+
+            if (hit._source.monthsOfWorkExperience != null) { ws.Cell(counter, 33).Value = Math.Round((double)hit._source.monthsOfWorkExperience / 12); }
+            if (hit._source.averageMonthsPerEmployer != null) { ws.Cell(counter, 34).Value = Math.Round((double)hit._source.averageMonthsPerEmployer / 12); }
+            ws.Cell(counter, 35).Value = Math.Round((double)hit._source.monthsOfManagementExperience / 12);
+            ws.Cell(counter, 36).Value = hit._source.currentManagementLevel;
+            ws.Cell(counter, 37).Value = hit._source.maxDegreeType;
+
+            if (hit._source.educationHistory != null)
+            {
+                foreach (var item in hit._source.educationHistory)
+                {
+                    ws.Cell(counter, 38).Value += item.schoolName;
+                    if (!String.IsNullOrEmpty(item.startDate) | !String.IsNullOrEmpty(item.endDate))
+                    {
+                        ws.Cell(counter, 38).Value += " (" + (!String.IsNullOrEmpty(item.startDate) ? item.startDate.Split('-')[0] : " ") + (!String.IsNullOrEmpty(item.startDate) & !String.IsNullOrEmpty(item.endDate) ? "-" : "") + (!String.IsNullOrEmpty(item.startDate) ? item.endDate.Split('-')[0] : " ") + ")";
+                    }
+                    ws.Cell(counter, 38).Value += ", ";
+                }
+            }
+
+            if (!String.IsNullOrEmpty(ws.Cell(counter, 38).Value.ToString()) & ws.Cell(counter, 38).Value.ToString().Length >= 2)
+            {
+                ws.Cell(counter, 38).Value = ws.Cell(counter, 38).Value.ToString().Substring(0, ws.Cell(counter, 38).Value.ToString().Length - 2);
+            }
+
+
+
+            foreach (var language in hit._source.languages)
+            {
+                ws.Cell(counter, 39).Value += language + " ";
+            }
+
+            if (hit._source.tags != null)
+            {
+                foreach (var tag in hit._source.tags)
+                {
+                    ws.Cell(counter, 40).Value += tag + " ";
+                }
+            }
+
+
+            ws.Cell(counter, 41).Value = "link";
+            ws.Cell(counter, 41).Hyperlink = new XLHyperlink("https://app.smartcv.co/application?id=" + hit._id);
+            ws.Cell(counter, 42).Value = hit._source.expiryDate;
+
+            if (hit._source.answerTags != null)
+            {
+                ws.Cell(counter, 43).Value = string.Join(", ", hit._source.answerTags);
+                //foreach (var answerTag in hit._source.answerTags)
+                //{
+                //  ws.Cell(counter, 43).Value += answerTag + " ";
+                //}
+            }
+
+            if (hit._source.answersFreeText != null)
+            {
+                for (int i = 0; i < hit._source.answersFreeText.Length; i++)
+                {
+                    var item = hit._source.answersFreeText[i];
+                    if (!string.IsNullOrEmpty(item.answer) && !string.IsNullOrEmpty(item.question))
+                    {
+                        ws.Cell(counter, 44).Value += $"{item.question}: {item.answer}";
+                    }
+                    if (i< hit._source.answersFreeText.Length-1) { ws.Cell(counter, 44).Value += "\n"; };
+                }
+                //foreach (var item in hit._source.answersFreeText)
+                //{
+                //  if (!string.IsNullOrEmpty(item.answer) && !string.IsNullOrEmpty(item.question))
+                //  {
+                //    ws.Cell(counter, 44).Value += $"[{item.question}: {item.answer}]";
+                //  }
+                //  ws.Cell(counter, 44).Value += "\n, ";
+                //}
+            }
+            // CellType’s wordwrap and Multiline property to true
+            ws.Cell(counter, 44).Style.Alignment.WrapText = true;
+            ws.Cell(counter, 44).Style.Font.FontSize = 9;
+
+            if (hit._source.comments != null)
+            {
+                for (int i = 0; i < hit._source.comments.Length; i++)
+                {
+                    var item = hit._source.comments[i];
+                    if (item != null)
+                    {
+
+                        if (string.IsNullOrEmpty(item.comment) && item.ratingValue > 0)
+                        {
+                            ws.Cell(counter, 45).Value += $"{Utils.LocalDateTimePattern(DateTime.MinValue, userPrefs.uiLanguage, userPrefs.timeZoneId, item.commentDateTime)} - {item.loginFullName} - {item.ratingValue.ToString()}/5";
+
+                        }
+                        else {
+                            ws.Cell(counter, 45).Value += $"{Utils.LocalDateTimePattern(DateTime.MinValue, userPrefs.uiLanguage, userPrefs.timeZoneId, item.commentDateTime)} - {item.loginFullName}" + (item.ratingValue > 0 ? $"- {item.ratingValue.ToString()}/5" : "") + $" - {item.comment}";
+                        }
+
+
+                    }
+                    if (i < hit._source.comments.Length - 1) { ws.Cell(counter, 45 ).Value += "\n"; };
+                }
+            }
+            // CellType’s wordwrap and Multiline property to true
+            ws.Cell(counter, 45).Style.Alignment.WrapText = true;
+            ws.Cell(counter, 45).Style.Font.FontSize = 9;
+            ws.Cell(counter, 16).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
+
+            if (projectsEnabled)
+            {
+                ws.Cell(counter, 46).Value = hit._source.projectId;
+                ws.Cell(counter, 47).Value = hit._source.projectName;
+            }
+
+        }
+
+    }
+}
+
+ws.Columns("A", "AP").AdjustToContents();
+
+
+ws.Column("A").Width = 10;
+ws.Column("E").Width = 12;
+ws.Column("G").Width = 12;
+ws.Column("L").Width = 7;
+ws.Column("M").Width = 6;
+ws.Column("W").Width = 5;
+ws.Column("Y").Width = 6;
+ws.Column("AG").Width = 9;
+ws.Column("AH").Width = 9;
+ws.Column("AI").Width = 9;
+
+ws.Column("AE").Width = 50;
+ws.Column("AF").Width = 50;
+ws.Column("AL").Width = 50;
+ws.Column("AR").Width = 120;
+ws.Column("AS").Width = 120;
+//ws.Column("AR").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+ws.Row(1).Style.Font.Bold = true;
+ws.Row(1).Style.Font.FontSize = 10;
+ws.Row(1).Style.Alignment.WrapText = true;
+
+ws.SheetView.Freeze(1, 0);
+
+ws.Column("S").AdjustToContents();
+ws.Column("AR").AdjustToContents();
+ws.Column("AS").AdjustToContents();
+
+db.Execute("INSERT INTO log_export_data (ledLoginId, ledCustomerId, ledParameters) VALUES (@0, @1, @2)",
+    WebSecurity.CurrentUserId,
+    currentCustomerId,
+    Request.QueryString.ToString()
+    );
+
+string myName = Server.UrlEncode("applications" + "_" + DateTime.Now.ToShortDateString());
+MemoryStream stream = GetStream(wb);
+
+Response.Clear();
+Response.Buffer = true;
+Response.AddHeader("content-disposition", "attachment; filename=" + myName + ".xlsx");
+Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+Response.BinaryWrite(stream.ToArray());
+Response.End();
+
+
+
+
+}
+
+@functions {
+  public MemoryStream GetStream(XLWorkbook excelWorkbook)
+  {
+    MemoryStream fs = new MemoryStream();
+    excelWorkbook.SaveAs(fs);
+    fs.Position = 0;
+    return fs;
+  }
+}
+
+kstoupakis@velmar.gr
+kstoupakis@velmar.gr

@@ -317,4 +317,4 @@ GROUP BY
 	--SELECT SUM(tTotalParses) as totalParses, SUM(tUsedParses) AS usedParses 
 	--FROM transactions WITH (NOLOCK) 
 	--JOIN products ON (tProductId=pId)
-	--WHERE tCustomerId= 219 AND tStatus=3 AND pType=1
+	--WHERE tCustomerId= 219 AND tStatus=3 AND pType=1  

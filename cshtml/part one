@@ -1,0 +1,385 @@
+@using System.IO;
+@using RestSharp;
+@using ClosedXML.Excel;
+
+@{
+
+  var jobId = Request.QueryString["jobId"].AsInt(0);
+  var organizationId = Request.QueryString["orgId"].AsInt(0);
+  var customQuery = Request.QueryString["cq"].AsInt(0) == 1;
+  dynamic currentCustomerId = null;
+  #region security
+  if (!WebSecurity.IsAuthenticated) { SmartCV.ReturnUnauthenticated(Response); }
+  using (var dbs = Database.Open("smartcv"))
+  {
+    var job = dbs.QuerySingle(@"SELECT c.cId FROM jobs j WITH (NOLOCK)
+      JOIN organizations o ON (j.jOrganizationId=o.oId)
+      JOIN customers c ON (o.oCustomerId=c.cId)
+      WHERE (j.jId=@0 OR j.jId=0) AND (o.oId=@1 OR @1=0)", jobId, organizationId);
+
+    var org = dbs.QuerySingle(@"SELECT o.oId FROM organizations o WITH (NOLOCK)
+      JOIN customers c ON (o.oCustomerId=c.cId)
+      WHERE (o.oId=@0 OR @0=0)", organizationId);
+
+    currentCustomerId = dbs.QueryValue("SELECT lCustomerId FROM logins WITH (NOLOCK) JOIN roles ON (lRoleId=rlId) WHERE lId=@0", WebSecurity.CurrentUserId);
+    #region customer cross-check
+    if ((jobId > 0 && job == null) || (organizationId > 0 && org == null) || currentCustomerId == null) { SmartCV.ReturnUnauthenticated(Response); }
+    #endregion customer cross-check
+  }
+  #endregion security
+
+  var db = Database.Open("smartcv");
+  //var currentCustomerId = db.QueryValue("SELECT lCustomerId FROM logins WHERE lId=@0", WebSecurity.CurrentUserId);
+  var userPrefs = SmartCV.GetUserPrefs(WebSecurity.CurrentUserId);
+  var uiTerms = Utils.GetTerms(userPrefs.uiLanguage);
+  var projects = db.QuerySingle(@"SELECT TOP 1 prj.* FROM projects prj
+                              JOIN customers c ON c.cId = prj.prjCustomerId
+                              WHERE prjCustomerId=@0 AND prjIsActive=1
+                              ORDER BY prjName", currentCustomerId);
+
+  var projectsEnabled = projects != null;
+
+  if (jobId > 0)
+  {
+    var job = db.QuerySingle("SELECT * FROM jobs JOIN organizations ON (jOrganizationId=oId) WHERE jId=@0", jobId);
+    if (job == null)
+    {
+      Response.End();
+    }
+    else if (job.oCustomerId != currentCustomerId)
+    {
+      Response.End();
+    }
+  }
+
+
+  var mainQuery = "customerId:" + currentCustomerId.ToString();
+
+  if (jobId > 0)
+  {
+    mainQuery += " AND jobId:" + jobId.ToString();
+  }
+
+  if (organizationId > 0)
+  {
+    mainQuery += " AND organizationId:" + organizationId.ToString();
+  }
+
+  if (customQuery)
+  {
+
+    var q = Request["q"];
+    var queryText = string.IsNullOrEmpty(q) ? string.Empty : Server.UrlDecode(Server.UrlEncode(q)).ToString().Trim();
+    var matchScore = Request["averageMatchScore"];
+    var jobTitles = Request["jobTitles"];
+    var internalSourceName = Request["internalSourceName"];
+    var externalSource = Request["externalSource"];
+    var pipelineStageName = Request["pipelineStageName"];
+    var projectName = Request["projectName"];
+    var administrativeArea = Request["administrativeArea"];
+    var isEmployed = Request["isEmployed"];
+    var employers = Request["employers"];
+    var employersTxt = Request["employersTxt"];
+    var positionTitles = Request["positionTitles"];
+    var positionTitlesTxt = Request["positionTitlesTxt"];
+    var jobExperienceType = Request["jobExperienceType"];
+    var currentManagementLevel = Request["currentManagementLevel"];
+    var executiveType = Request["executiveType"];
+    var schoolTypes = Request["schoolTypes"];
+    var degreeTypes = Request["degreeTypes"];
+    var languages = Request["languages"];
+    var monthsOfWorkExperience = Request["monthsOfWorkExperience"];
+    var monthsOfManagementExperience = Request["monthsOfManagementExperience"];
+    var tags = Request["tags"];
+    var hasParsingIssues = Request["hasParsingIssues"];
+    var answerTags =Request["answerTags"];
+    var answersFreeText = Request["answersFreeText"];
+    var comments = Request["comments"];
+
+    var skills = Request["skills"];
+    var sortOrder = Request["sort"];
+
+
+    Dictionary<string, string> sortOptions = new Dictionary<string, string>();
+    sortOptions.Add("createdDateTime:desc", uiTerms["lblSortNewest"]);
+    sortOptions.Add("matchScore:desc", uiTerms["lblSortMatchScore"]);
+    sortOptions.Add("averageRating:desc", uiTerms["lblSortAverageRating"]);
+    sortOptions.Add("geoDistance:asc", uiTerms["lblSortGeoDistance"]);
+    sortOptions.Add("createdDateTime:asc", uiTerms["lblSortOldest"]);
+    sortOptions.Add("monthsOfWorkExperience:desc", uiTerms["lblSortLongestExperience"]);
+    sortOptions.Add("monthsOfWorkExperience:asc", uiTerms["lblSortShortestExperience"]);
+    sortOptions.Add("maxDegreeLevel:desc", uiTerms["lblSortHighestEducationLevel"]);
+    sortOptions.Add("averageMonthsPerEmployer:desc", uiTerms["lblSortLongestPerEmployerExperience"]);
+    sortOptions.Add("averageMonthsPerEmployer:asc", uiTerms["lblSortShortestPerEmployerExperience"]);
+    sortOptions.Add("monthsOfManagementExperience:desc", uiTerms["lblSortLongestMgmtExperience"]);
+    sortOptions.Add("monthsOfManagementExperience:asc", uiTerms["lblSortShortestMgmtExperience"]);
+    sortOptions.Add("highestManagementScore:desc", uiTerms["lblSortHighestMgmtLevel"]);
+    sortOptions.Add("highestManagementScore:asc", uiTerms["lblSortLowestMgmtLevel"]);
+    sortOptions.Add("isEmployed:desc", uiTerms["lblSortIsEmployed"]);
+    sortOptions.Add("isEmployed:asc", uiTerms["lblSortIsUnemployed"]);
+    sortOptions.Add("numOfLanguages:desc", uiTerms["lblSortNumOfLanguages"]);
+
+
+    Func<string, string, string> filterMatch = (member, defaultValue) =>
+    {
+      var value = Utils.ValueOrEmptyString((dynamic)userPrefs, member);
+      var result = string.Empty;
+      switch (value.ToString().ToLower())
+      {
+        case "any":
+          result = " OR ";
+          break;
+        case "all":
+          result = " AND ";
+          break;
+        default:
+          result = defaultValue;
+          break;
+      }
+      return result;
+    };
+
+    IDictionary<string, string> filterTerms = new Dictionary<string, string>();
+    filterTerms.Add("[0 TO 0.9]", "lblNoWorkExperience");
+    filterTerms.Add("[1 TO 36]", "lblUpTo3Years");
+    filterTerms.Add("[36 TO 60]", "lbl3To5Years");
+    filterTerms.Add("[60 TO 120]", "lbl5To10Years");
+    filterTerms.Add("[120 TO 180]", "lbl10To15Years");
+    filterTerms.Add("[180 TO *]", "lblOver15Years");
+
+
+    //var sortField = sortOrder.Split(':')[0];
+    var sortLine = "";
+
+
+
+    if (!String.IsNullOrEmpty(matchScore))
+    {
+      mainQuery += " AND (";
+      foreach (var averageMatchScoreKey in matchScore.Split(','))
+      {
+        mainQuery += @"averageMatchScore:""" + averageMatchScoreKey + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!string.IsNullOrEmpty(internalSourceName))
+    {
+      mainQuery += " AND (";
+      foreach (var internalSourceNameKey in internalSourceName.Split(','))
+      {
+        mainQuery += @"internalSourceName:""" + internalSourceNameKey + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(externalSource))
+    {
+      mainQuery += " AND (";
+      foreach (var externalSourceKey in externalSource.Split(','))
+      {
+        mainQuery += @"externalSource:""" + externalSourceKey + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!string.IsNullOrEmpty(pipelineStageName))
+    {
+      mainQuery += " AND (";
+      foreach (var psn in pipelineStageName.Split(','))
+      {
+        mainQuery += @"pipelineStageName:""" + psn + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    #region projectName
+    if (projectsEnabled && !string.IsNullOrEmpty(projectName))
+    {
+      mainQuery += " AND (";
+      foreach (var psn in projectName.Split(','))
+      {
+        mainQuery += @"projectName:""" + psn + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+    #endregion projectName
+
+    if (!String.IsNullOrEmpty(administrativeArea))
+    {
+      mainQuery += " AND (";
+      foreach (var administrativeAreaKey in administrativeArea.Split(','))
+      {
+        mainQuery += @"administrativeArea:""" + administrativeAreaKey + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(employers))
+    {
+      mainQuery += " AND (";
+      foreach (var employer in employers.Split(','))
+      {
+        mainQuery += @"employers:""" + employer + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(employersTxt))
+    {
+      mainQuery += @" AND (employersTxt: """ + employersTxt + @""") ";
+    }
+
+    if (!String.IsNullOrEmpty(positionTitles))
+    {
+      mainQuery += " AND (";
+      foreach (var positionTitle in positionTitles.Split(','))
+      {
+        mainQuery += @"positionTitles:""" + positionTitle + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(positionTitlesTxt))
+    {
+      mainQuery += @" AND (positionTitlesTxt: """ + positionTitlesTxt.Replace("&", " ") + @""") ";
+    }
+
+    if (!String.IsNullOrEmpty(isEmployed))
+    {
+      mainQuery += " AND (";
+      foreach (var isEmployedKey in isEmployed.Split(','))
+      {
+        mainQuery += @"isEmployed:""" + isEmployedKey + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!string.IsNullOrEmpty(tags))
+    {
+      mainQuery += " AND (";
+      foreach (var tag in tags.Split(','))
+      {
+        mainQuery += @"tags:""" + tag + "\"" + filterMatch("filterMatchTags", " AND ");
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(answerTags))
+    {
+      mainQuery += " AND (";
+      foreach (var answerTag in answerTags.Split(','))
+      {
+        mainQuery += @"answerTags:""" + Utils.EscapeElasticQuery(answerTag) + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(jobExperienceType))
+    {
+      mainQuery += " AND (";
+      foreach (var jobExperienceTypeKey in jobExperienceType.Split(','))
+      {
+        mainQuery += @"jobExperienceType:""" + (jobExperienceTypeKey.Replace("_comma_", ",")) + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(currentManagementLevel))
+    {
+      mainQuery += " AND (";
+      foreach (var currentManagementLevelKey in currentManagementLevel.Split(','))
+      {
+        mainQuery += @"currentManagementLevel:""" + currentManagementLevelKey + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(executiveType))
+    {
+      mainQuery += " AND (";
+      foreach (var executiveTypeKey in executiveType.Split(','))
+      {
+        mainQuery += @"executiveType:""" + executiveTypeKey + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(schoolTypes))
+    {
+      mainQuery += " AND (";
+      foreach (var schoolType in schoolTypes.Split(','))
+      {
+        mainQuery += @"schoolTypes:""" + schoolType + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(degreeTypes))
+    {
+      mainQuery += " AND (";
+      foreach (var degreeType in degreeTypes.Split(','))
+      {
+        mainQuery += @"degreeTypes:""" + degreeType + @""" OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(languages))
+    {
+      mainQuery += " AND (";
+      foreach (var language in languages.Split(','))
+      {
+        mainQuery += @"languages:""" + language + @"""" + filterMatch("filterMatchLanguages", " AND ");
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(monthsOfWorkExperience))
+    {
+      mainQuery += " AND (";
+      foreach (var monthsOfWorkExperienceKey in monthsOfWorkExperience.Split(','))
+      {
+        mainQuery += @"monthsOfWorkExperience:" + monthsOfWorkExperienceKey + " OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(monthsOfManagementExperience))
+    {
+      mainQuery += " AND (";
+      foreach (var monthsOfManagementExperienceKey in monthsOfManagementExperience.Split(','))
+      {
+        mainQuery += @"monthsOfManagementExperience:" + monthsOfManagementExperienceKey + " OR ";
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    if (!String.IsNullOrEmpty(skills))
+    {
+      mainQuery += " AND (";
+      foreach (var skill in skills.Split(','))
+      {
+        mainQuery += "skills:\"" + skill + "\"" + filterMatch("filterMatchSkills", " AND ");//default value is AND
+      }
+      mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+    }
+
+    
+    if (!String.IsNullOrEmpty(hasParsingIssues))
+        {
+            mainQuery += " AND (";
+            foreach (var hasParsingIssuesKey in hasParsingIssues.Split(','))
+            {
+                mainQuery += @"hasParsingIssues:""" + hasParsingIssuesKey + @""" OR ";
+            }
+            mainQuery = mainQuery.Substring(0, mainQuery.Length - 4) + ")";
+        }
+    
+        if (!string.IsNullOrEmpty(queryText))
+        {
+            var escapedQuery = Utils.EscapeElasticQuery(queryText).Replace(" and ", " AND ").Replace(" or ", " OR ");
+    
+            mainQuery += $@" AND ({escapedQuery})";//cvText
+        }
+    }
