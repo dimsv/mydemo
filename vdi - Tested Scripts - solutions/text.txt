@@ -1,0 +1,7 @@
+
+
+
+
+
+=DATE(VALUE(RIGHT(b2; 4)); VALUE(LEFT(b2; FIND("/"; b2) - 1)); VALUE(MID(b2; FIND("/"; b2) + 1; FIND("/"; b2; FIND("/"; b2) + 1) - FIND("/"; b2) - 1)))
+=DATE(VALUE(RIGHT(A2, 4)), VALUE(LEFT(A2, FIND("/", A2) - 1)), VALUE(MID(A2, FIND("/", A2) + 1, FIND("/", A2, FIND("/", A2) + 1) - FIND("/", A2) - 1)))
