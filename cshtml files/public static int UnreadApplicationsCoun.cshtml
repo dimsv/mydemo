@@ -1,0 +1,62 @@
+@{
+    public static int UnreadApplicationsCount(int jobId, int projectId, int loginId, dynamic db)
+    {
+        var readApplicationIds = db.Query("SELECT eApplicationId FROM events WITH (NOLOCK) WHERE eType=14 AND eJobId=@0 AND eCreatedBy=@1", jobId, loginId);
+        var readApplicationIdsList = readApplicationIds.Select(id => (int)id.eApplicationId).ToList();
+
+        string countQuery = $"SELECT COUNT(*) FROM applications WITH (NOLOCK) WHERE aJobId=@0";
+
+        if (readApplicationIdsList.Count > 0)
+        {
+            string ids = string.Join(",", readApplicationIdsList);
+            countQuery += $" AND aId NOT IN ({ids})";
+        }
+
+        if (projectId > 0)
+        {
+            countQuery += $" AND aProjectId=@1";
+        }
+
+        return db.QueryValue(countQuery, jobId, projectId > 0 ? projectId : (object)DBNull.Value);
+    }
+}
+
+
+@using System.Dynamic;
+@using Newtonsoft.Json;
+
+@{
+    if (!IsPost)
+    {
+        var jobId = Request["jobId"].AsInt(0);
+        var projectId = Request["projectId"].AsInt(0);
+
+        var db = Database.Open("smartcv");
+        db.CommandTimeout = 300; // Set timeout to 5 minutes
+
+        #region security
+        if (jobId <= 0 || !WebSecurity.IsAuthenticated) { SmartCV.ReturnUnauthenticated(Response); }
+
+        var currentLogin = db.QuerySingle(@"SELECT distinct lCustomerId FROM logins l WITH (NOLOCK) 
+                                            JOIN roles r ON (l.lRoleId=r.rlId) 
+                                            JOIN customers c ON c.cId = l.lCustomerId
+                                            JOIN organizations o ON o.oCustomerId = c.cId
+                                            JOIN jobs j ON j.jOrganizationId = o.oId
+                                            WHERE l.lId=@0 AND j.jId=@1", WebSecurity.CurrentUserId, jobId);
+
+        if (currentLogin == null) { SmartCV.ReturnUnauthenticated(Response); }
+
+        var currentCustomerId = currentLogin.lCustomerId;
+        if (currentCustomerId == null || currentCustomerId < 1) { SmartCV.ReturnUnauthenticated(Response); }
+
+        #endregion security
+
+        var unreadApplicationsCount = SmartCV.UnreadApplicationsCount(jobId, projectId, WebSecurity.CurrentUserId, db);
+
+        dynamic response = new ExpandoObject();
+        response.unreadApplicationsCount = unreadApplicationsCount;
+
+        Response.ContentType = "application/json";
+        Response.Write(JsonConvert.SerializeObject(response));
+    }
+}
